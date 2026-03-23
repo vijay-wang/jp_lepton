@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <sys/ioctl.h>
 
 #include "../net/net.h"
 #include "../sdk/sdk_frame.h"
@@ -23,6 +24,7 @@
 #include "../sdk/sdk_cmd.h"
 #include "../sdk/sdk_file.h"
 #include "server_session.h"
+#include "shmq.h"
 
 /* -----------------------------------------------------------------------
  * Receive buffer (mirrors sdk.c rx_buf_t)
@@ -250,15 +252,21 @@ static int sess_send_frame(struct server_session *sess,
  * Image sender thread  (~10 fps, 64x64 RGB fake frames)
  * -------------------------------------------------------------------- */
 
-#define FAKE_IMG_W   64
-#define FAKE_IMG_H   64
-#define FAKE_IMG_BPP 3
+#define IMG_W   160
+#define IMG_H   120
+#define IMG_BPP 2
 
 static void *img_thread_fn(void *arg)
 {
+	int ret;
+	int shmq_fd;
+	void *pool;
+	struct shmq_buf_desc desc;
+	struct shmq_lookup lk;
+	size_t pool_sz;
 	struct server_session *sess = (struct server_session *)arg;
-	size_t   reserved = (size_t)FAKE_IMG_W * FAKE_IMG_BPP * 4;
-	size_t   pixels   = (size_t)FAKE_IMG_W * FAKE_IMG_H * FAKE_IMG_BPP;
+	size_t   reserved = (size_t)IMG_W * IMG_BPP * 4;
+	size_t   pixels   = (size_t)IMG_W * IMG_H * IMG_BPP;
 	size_t   total    = 6 + reserved + pixels;
 	uint8_t *frame    = calloc(1, total);
 
@@ -267,35 +275,59 @@ static void *img_thread_fn(void *arg)
 		return NULL;
 	}
 
-	frame[0] = (uint8_t)(FAKE_IMG_W >> 8);
-	frame[1] = (uint8_t)(FAKE_IMG_W);
-	frame[2] = (uint8_t)(FAKE_IMG_H >> 8);
-	frame[3] = (uint8_t)(FAKE_IMG_H);
-	frame[4] = FAKE_IMG_BPP;
-	frame[5] = SDK_PIX_FMT_RGB;
-
-	{
-		uint8_t *px = frame + 6 + reserved;
-		size_t   i;
-		for (i = 0; i < pixels; i += FAKE_IMG_BPP) {
-			px[i]   = (uint8_t)((i / FAKE_IMG_BPP) & 0xFF);
-			px[i+1] = (uint8_t)(((i / FAKE_IMG_BPP) * 2) & 0xFF);
-			px[i+2] = (uint8_t)(((i / FAKE_IMG_BPP) * 3) & 0xFF);
-		}
+	shmq_fd = shmq_open_dev();
+	if (shmq_fd != 0) {
+		fprintf(stderr, "open shmq device failed\n");
+		goto open_dev_failed;
 	}
+
+	strcpy(lk.name, "lpt_img_shmq");
+	ret = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
+	if (ret != 0) {
+		fprintf(stderr, "lookup %s failed\n", lk.name);
+		goto lookup_failed;
+	}
+
+	desc.queue_id = lk.queue_id;
+	fprintf(stdout, "lookup qid = %d\n", lk.queue_id);
+
+	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
+	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
+
+	frame[0] = (uint8_t)(IMG_W >> 8);
+	frame[1] = (uint8_t)(IMG_W);
+	frame[2] = (uint8_t)(IMG_H >> 8);
+	frame[3] = (uint8_t)(IMG_H);
+	frame[4] = IMG_BPP;
+	frame[5] = SDK_PIX_FMT_Y16;
 
 	while (atomic_load(&sess->running)) {
-		struct timespec ts = { .tv_sec = 0, .tv_nsec = 100000000L };
+		uint8_t *px = frame + 6 + reserved;
 
-		frame[6 + reserved]++;   /* simple animation */
+		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
+		if (ret != 0) {
+			fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
+			continue;
+		}
 
-		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, frame, total)
-		    != 0)
-			break;
+		memcpy(frame, pool + desc.offset, desc.data_size);
 
-		nanosleep(&ts, NULL);
+		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, frame, total) != 0) {
+			fprintf(stderr, "sess_send_frame failed\n");
+			continue;
+		}
+
+		ret = ioctl(shmq_fd, SHMQ_IOC_RELEASE, &desc);
+		if (ret != 0)
+			fprintf(stderr, "SHMQ_IOC_RELEASE failed, ret:%d\n", ret);
 	}
 
+	shmq_munmap_queue(pool, pool_sz);
+	shmq_destroy_queue(shmq_fd, lk.queue_id);
+
+lookup_failed:
+	shmq_close_dev(shmq_fd);
+open_dev_failed:
 	free(frame);
 	return NULL;
 }
