@@ -47,6 +47,7 @@ if(NOT WIN32)
         server/main.c
         server/server.c
         server/server_session.c
+        server/shmq.c
     )
     target_include_directories(server PRIVATE sdk net server)
     target_link_libraries(server sdk net)
