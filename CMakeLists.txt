@@ -54,3 +54,5 @@ if(NOT WIN32)
 endif()
 
 add_subdirectory(./demo)
+
+add_subdirectory(./lepton_sdk)
