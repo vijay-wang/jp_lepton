@@ -54,9 +54,13 @@
 #include "LEPTON_I2C_Reg.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Aardvark Includes */
 #include "aardvark.h"
+
+#include "../sdk/sdk.h"
+#include "../sdk/sdk_cmd.h"
 
 /* FTDI Includes */
 #include "ftd2xx.h"
@@ -104,6 +108,12 @@ LEP_UINT8 rx[I2C_BUFFER_SIZE];
 LEP_PROTOCOL_DEVICE_E masterDevice = LINUX_I2CDEV_I2C;
 Aardvark handle;
 
+/* cci comminication handle */
+void *ccih = NULL;
+
+#define MAC_COM_I2C_READ 0
+#define MAC_COM_I2C_WRITE 1
+
 LEP_CMD_PACKET_T cmdPacket;
 LEP_RESPONSE_PACKET_T responsePacket;
 
@@ -129,13 +139,50 @@ struct addrinfo *addrresult = NULL,
 /******************************************************************************/
 
 
-LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device)
+LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device, void *cci_handle)
 {
 	LEP_RESULT result = LEP_OK;
 
 	masterDevice = device;
+	ccih = cci_handle;
 
 	return(result);
+}
+
+static int decode_mac_com_packet(LEP_UINT8 *data, LEP_MAC_COM_PACKET_T *packet)
+{
+	if (data = NULL)
+		return -1;
+
+	packet->i2c_flag = data[0];
+	packet->reg_addr = data[1] | data[2] << 8;
+	packet->words_transfer = data[3] | data[4] << 8;
+	packet->data = &data[5];
+
+	if (packet->words_transfer)
+		packet->data = NULL;
+
+	return 0;
+}
+
+static int encode_mac_com_packet(LEP_UINT8 *data, LEP_UINT16 *out_len, LEP_MAC_COM_PACKET_T *packet)
+{
+	if (data = NULL)
+		return -1;
+
+	data[0] = packet->i2c_flag;
+	data[1] = packet->reg_addr & 0x00ff;
+	data[2] = (packet->reg_addr & 0xff00) >> 8;
+	data[3] = packet->words_transfer & 0x00ff;
+	data[4] = (packet->words_transfer & 0xff00) >> 8;
+	*out_len = 5;
+
+	if (packet->words_transfer && packet->data) {
+		memcpy(&data[5], packet->data, packet->words_transfer * sizeof(short));
+		*out_len += packet->words_transfer * sizeof(short);
+	}
+
+	return 0;
 }
 
 
@@ -290,6 +337,8 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 				return(LEP_ERROR_CREATING_COMM);
 			}
 			break;
+		case MAC_COM:
+			break;
 		case AARDVARK_I2C:
 		default:
 			numAardvarkConnected = aa_find_devices(1, &numFreeDevices);
@@ -335,6 +384,8 @@ LEP_RESULT DEV_I2C_MasterClose()
 		case LINUX_I2CDEV_I2C:
 			i2cdev_close();
 			break;
+		case MAC_COM:
+			break;
 		case AARDVARK_I2C:
 		default:
 			aa_close(handle);
@@ -364,6 +415,10 @@ LEP_RESULT DEV_I2C_MasterReset(void )
 			break;
 
 		case LINUX_I2CDEV_I2C:
+			break;
+
+		case MAC_COM:
+			ccih = NULL;
 			break;
 
 		case AARDVARK_I2C:
@@ -467,6 +522,31 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 				bytesActuallyRead = 0;
 			}
 			break;
+
+		case MAC_COM: {
+			sdk_cmd_result_t res;
+			sdk_err_t ret;
+			LEP_MAC_COM_PACKET_T packet;
+			LEP_UINT16 out_len;
+			sdk_handle_t *mac_com = ccih;
+
+			packet.i2c_flag = MAC_COM_I2C_READ;
+			packet.reg_addr = regAddress;
+			packet.words_transfer = wordsToRead;
+			packet.data = NULL;
+
+			encode_mac_com_packet(txdata, &out_len, &packet);
+
+			ret = sdk_send_cmd(mac_com, SDK_CMD_FLAG_READ, txdata, out_len, &res, 500);
+			if (ret == SDK_OK && res.ret_code == 0) {
+				decode_mac_com_packet(res.data, &packet);
+				memcpy(readDataPtr, packet.data, packet.words_transfer * sizeof(short));
+				memcpy(numWordsRead, &packet.words_transfer, sizeof(short));
+			} else
+				result = LEP_ERROR_I2C_FAIL;
+
+			break;
+		}
 		case AARDVARK_I2C:
 		default:
 
@@ -585,6 +665,35 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 				bytesActuallyWritten = 0;
 			}
 			break;
+
+		case MAC_COM: {
+			sdk_cmd_result_t res;
+			sdk_err_t ret;
+			LEP_MAC_COM_PACKET_T packet;
+			LEP_UINT16 out_len;
+			sdk_handle_t *mac_com = ccih;
+
+			packet.i2c_flag = MAC_COM_I2C_WRITE;
+			packet.reg_addr = regAddress;
+			packet.words_transfer = wordsToWrite;
+			packet.data = (LEP_UINT8 *)writeDataPtr;
+
+			encode_mac_com_packet(txdata, &out_len, &packet);
+
+			ret = sdk_send_cmd(mac_com, SDK_CMD_FLAG_WRITE, txdata, out_len, &res, 500);
+			if (ret == SDK_OK && res.ret_code == 0) {
+				int err_code;
+
+				decode_mac_com_packet(res.data, &packet);
+				memcpy(numWordsWritten, &packet.words_transfer, sizeof(short));
+				err_code = *(int *)packet.data;
+				if (err_code != 0)
+					result = LEP_ERROR_I2C_FAIL;
+			} else
+				result = LEP_ERROR_I2C_FAIL;
+
+			break;
+		}
 		case AARDVARK_I2C:
 		default:
 
@@ -645,7 +754,6 @@ LEP_RESULT DEV_I2C_MasterStatus(void )
 
 	return(result);
 }
-
 
 /******************************************************************************/
 /** PRIVATE MODULE FUNCTIONS                                                 **/

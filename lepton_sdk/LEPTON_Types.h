@@ -219,6 +219,7 @@ extern "C"
 		LINUX_I2CDEV_I2C,
 		//C232HM_DDHSL_0,
 		TCP_IP,
+		MAC_COM,
 
 		/* SPI Devices */
 
@@ -255,6 +256,7 @@ extern "C"
 		LEP_CAMERA_PORT_E   portType;
 		LEP_UINT16  portBaudRate;
 		LEP_UINT8 deviceAddress;
+		void *cci_handle;
 	}LEP_CAMERA_PORT_DESC_T, *LEP_CAMERA_PORT_DESC_T_PTR;
 
 

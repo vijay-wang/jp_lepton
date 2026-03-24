@@ -74,6 +74,14 @@ extern "C"
 
 	} LEP_RESPONSE_PACKET_T;
 
+	typedef struct
+	{
+		LEP_UINT8 i2c_flag; /* read(0) or write(1)*/
+		LEP_UINT16 reg_addr;
+		LEP_UINT16 words_transfer;
+		LEP_UINT8 *data;
+	} LEP_MAC_COM_PACKET_T;
+
 	/******************************************************************************/
 	/** EXPORTED PUBLIC DATA                                                     **/
 	/******************************************************************************/
@@ -82,7 +90,7 @@ extern "C"
 	/** EXPORTED PUBLIC FUNCTIONS                                                **/
 	/******************************************************************************/
 
-	extern LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device);
+	extern LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device, void *cci_handl);
 
 	extern LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			LEP_UINT16 *BaudRate);

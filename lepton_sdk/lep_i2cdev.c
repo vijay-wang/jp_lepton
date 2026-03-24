@@ -94,7 +94,7 @@ int i2cdev_read_byte_data(LEP_UINT8 *rx_adr, LEP_UINT8 *rx_data, LEP_UINT32 rx_s
 {
 	int read_count = 0;
 
-	DEBUG_PRINT(5, "%s(rx_adr=%p, rx_data=%p, rx_size=%ld) called.\n", __func__, rx_adr, rx_data, rx_size);
+	DEBUG_PRINT(5, "%s(rx_adr=%p, rx_data=%p, rx_size=%d) called.\n", __func__, rx_adr, rx_data, rx_size);
 	DEBUG_PRINT(4, "Writing big-endian address 0x%02x%02x\n", rx_adr[0], rx_adr[1]);
 	int write_data = write(lepton_i2c_fd, rx_adr, ADDRESS_WIDTH);
 	if (write_data < 0)

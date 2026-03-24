@@ -109,7 +109,7 @@ LEP_RESULT LEP_I2C_MasterSelectDevice(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Do any device-specific calls to implement a close operation
 	*/
 #ifdef IMPLEMENTS_SELECT_DEVICE
-	result = DEV_I2C_MasterSelectDevice(device);
+	result = DEV_I2C_MasterSelectDevice(device, portDescPtr->cci_handle);
 #else
 	result = LEP_UNDEFINED_FUNCTION_ERROR;
 #endif

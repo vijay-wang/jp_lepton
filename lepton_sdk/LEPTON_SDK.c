@@ -232,7 +232,6 @@ LEP_RESULT LEP_RunCommand(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	return(result);
 }
 
-
 LEP_RESULT LEP_SelectDevice(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 		LEP_PROTOCOL_DEVICE_E device)
 {
