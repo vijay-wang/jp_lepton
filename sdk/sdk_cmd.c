@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
 #  ifndef WIN32_LEAN_AND_MEAN
@@ -106,6 +107,28 @@ int sdk_cmd_encode_read(uint64_t read_len,
     return 0;
 }
 
+int sdk_cmd_encode_ack(uint32_t ret_code, uint8_t cmd_flag,
+                             const uint8_t *data, uint64_t data_len,
+                             uint8_t *out, size_t out_cap, size_t *out_len)
+{
+    /* flag(1) + reserved(8) + ret_code(4) + data_len(8) + data(N) */
+    size_t need = 1 + SDK_CMD_RESERVED_SIZE + 4 + 8 + (size_t)data_len;
+    uint8_t *p  = out;
+
+    if (out_cap < need)
+        return -1;
+
+    put_u8(p, cmd_flag);   p += 1;
+    memset(p, 0, SDK_CMD_RESERVED_SIZE); p += SDK_CMD_RESERVED_SIZE;
+    put_u32(p, ret_code);                p += 4;
+    put_u64(p, data_len);                p += 8;
+    if (data && data_len)
+        memcpy(p, data, (size_t)data_len);
+
+    *out_len = need;
+    return 0;
+}
+
 int sdk_cmd_encode_read_ack(uint32_t ret_code,
                              const uint8_t *data, uint64_t data_len,
                              uint8_t *out, size_t out_cap, size_t *out_len)
@@ -137,6 +160,21 @@ uint8_t sdk_cmd_decode_flag(const uint8_t *payload, size_t payload_len)
     if (payload_len < 1)
         return 0xFF;
     return get_u8(payload);
+}
+
+int sdk_cmd_decode_request(const uint8_t *p, size_t len, sdk_cmd_request_t *out)
+{
+    /* flag(1)+reserved(8)+data_len(8) */
+    size_t hdr = 1 + SDK_CMD_RESERVED_SIZE + 8;
+
+    if (len < hdr)
+        return -1;
+
+    out->data_len = get_u64(p + 1 + SDK_CMD_RESERVED_SIZE);
+    if (len < hdr + (size_t)out->data_len)
+        return -1;
+    out->data = p + hdr;
+    return 0;
 }
 
 int sdk_cmd_decode_write(const uint8_t *p, size_t len, sdk_cmd_write_t *out)
@@ -172,6 +210,7 @@ int sdk_cmd_decode_read(const uint8_t *p, size_t len, sdk_cmd_read_t *out)
     if (len < hdr)
         return -1;
     out->read_len = get_u64(p + 1 + SDK_CMD_RESERVED_SIZE);
+    out->data = p + hdr;
     return 0;
 }
 
@@ -191,4 +230,19 @@ int sdk_cmd_decode_read_ack(const uint8_t *p, size_t len,
 
     out->data = p + hdr;
     return 0;
+}
+
+void *alloc_ack_buf(size_t data_len, size_t *ack_cap)
+{
+    /* flag(1) + reserved(8) + ret_code(4) + data_len(8) + data(N) */
+    size_t need = 1 + SDK_CMD_RESERVED_SIZE + 4 + 8 + (size_t)data_len;
+
+    *ack_cap = need;
+    return malloc(need);
+}
+
+void free_ack_buf(void *addr)
+{
+	free(addr);
+	addr = NULL;
 }

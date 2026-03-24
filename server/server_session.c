@@ -339,11 +339,57 @@ open_dev_failed:
 static void *cmd_thread_fn(void *arg)
 {
 	struct server_session *sess = (struct server_session *)arg;
+	int shmq_fd;
+	void *in_pool;
+	void *out_pool;
+	struct shmq_buf_desc in_desc;
+	struct shmq_buf_desc out_desc;
+	struct shmq_lookup lk;
+	size_t in_pool_sz;
+	size_t out_pool_sz;
+	void *ptr;
+	int r;
+
+	shmq_fd = shmq_open_dev();
+	if (shmq_fd != 0) {
+		fprintf(stderr, "open shmq device failed\n");
+		return NULL;
+	}
+
+	/* lookup and mmap lpt_cmd_in */
+	strcpy(lk.name, "lpt_cmd_in");
+	r = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
+	if (r != 0) {
+		fprintf(stderr, "lookup %s failed\n", lk.name);
+		goto lookup_failed;
+	}
+
+	in_desc.queue_id = lk.queue_id;
+	shmq_set_timeout(shmq_fd, in_desc.queue_id, 500);
+	in_pool = shmq_map_queue(shmq_fd, lk.queue_id, &in_pool_sz);
+	fprintf(stdout, "lookup lpt_cmd_in qid = %d\n", lk.queue_id);
+
+	/* lookup and mmap lpt_cmd_out */
+	strcpy(lk.name, "lpt_cmd_out");
+	r = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
+	if (r != 0) {
+		fprintf(stderr, "lookup %s failed\n", lk.name);
+		goto lookup_failed;
+	}
+
+	out_desc.queue_id = lk.queue_id;
+	shmq_set_timeout(shmq_fd, out_desc.queue_id, 500);
+	out_pool = shmq_map_queue(shmq_fd, lk.queue_id, &out_pool_sz);
+	fprintf(stdout, "lookup lpt_cmd_out qid = %d\n", lk.queue_id);
 
 	for (;;) {
 		struct queued_frame qf;
 		uint8_t flag;
-		int r = fq_pop(&sess->cmd_queue, &qf, -1);
+		sdk_cmd_request_t request;
+		r = fq_pop(&sess->cmd_queue, &qf, -1);
+		uint8_t *ack;
+		size_t ack_cap;
+		size_t ack_len;
 
 		if (r == -1)
 			break;
@@ -351,51 +397,49 @@ static void *cmd_thread_fn(void *arg)
 			continue;
 
 		flag = sdk_cmd_decode_flag(qf.payload, qf.len);
+		sdk_cmd_decode_request(qf.payload, qf.len, &request);
 
-		if (flag == SDK_CMD_FLAG_WRITE) {
-			sdk_cmd_write_t wr;
-			uint8_t         rsp[1 + SDK_CMD_RESERVED_SIZE + 4];
-			size_t          rsp_len = 0;
-
-			if (sdk_cmd_decode_write(qf.payload, qf.len, &wr) == 0)
-				printf("[server] CMD write: %llu bytes\n",
-				       (unsigned long long)wr.data_len);
-
-			sdk_cmd_encode_write_ack(0, rsp, sizeof(rsp), &rsp_len);
-			sess_send_frame(sess, SDK_FRAME_TYPE_CMD, rsp, rsp_len);
-
-		} else if (flag == SDK_CMD_FLAG_READ) {
-			sdk_cmd_read_t  rd;
-			uint8_t        *rsp;
-			size_t          rsp_len = 0;
-			const char     *fake    = "FAKE_REGISTER_DATA_0123456789";
-			size_t          fake_len;
-
-			if (sdk_cmd_decode_read(qf.payload, qf.len, &rd) != 0) {
-				free(qf.payload);
-				continue;
-			}
-
-			fake_len = rd.read_len < 30
-				   ? (size_t)rd.read_len : 30;
-			rsp = malloc(1 + SDK_CMD_RESERVED_SIZE + 4 + 8
-				     + fake_len);
-			if (rsp) {
-				sdk_cmd_encode_read_ack(0,
-					(const uint8_t *)fake,
-					(uint64_t)fake_len,
-					rsp,
-					1 + SDK_CMD_RESERVED_SIZE + 4 + 8
-					+ fake_len,
-					&rsp_len);
-				sess_send_frame(sess, SDK_FRAME_TYPE_CMD,
-						rsp, rsp_len);
-				free(rsp);
-			}
+get_free:
+		/* cmd request */
+		r = ioctl(shmq_fd, SHMQ_IOC_GET_FREE, &in_desc);
+		if (r < 0) {
+			fprintf(stderr, "SHMQ_IOC_GET_FREE failed, ret:%d\n", r);
+			goto get_free;
 		}
 
+		ptr = in_pool + in_desc.offset;
+		memcpy(ptr, request.data, request.data_len);
+		in_desc.data_size = request.data_len;
+
+		ioctl(shmq_fd, SHMQ_IOC_ENQUEUE, &in_desc);
+
+dequeue:
+		/* cmd ack */
+		r = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &out_desc);
+		if (r != 0) {
+			fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d\n", r);
+			goto dequeue;
+		}
+
+		ptr = out_pool + out_desc.offset;
+
+		ack = alloc_ack_buf(out_desc.data_size, &ack_cap);
+		sdk_cmd_encode_ack(0, flag, ptr, out_desc.data_size, ack, ack_cap, &ack_len);
+		sess_send_frame(sess, SDK_FRAME_TYPE_CMD, ack, ack_len);
+		free_ack_buf(ack);
+
+		ioctl(shmq_fd, SHMQ_IOC_RELEASE, &out_desc);
 		free(qf.payload);
 	}
+
+	shmq_munmap_queue(in_pool, in_pool_sz);
+	shmq_destroy_queue(shmq_fd, in_desc.queue_id);
+
+	shmq_munmap_queue(out_pool, out_pool_sz);
+	shmq_destroy_queue(shmq_fd, out_desc.queue_id);
+
+lookup_failed:
+	shmq_close_dev(shmq_fd);
 	return NULL;
 }
 
