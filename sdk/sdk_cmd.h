@@ -53,32 +53,18 @@ typedef struct sdk_cmd_req {
     const uint8_t  *data;       /* points into rx buffer – do not free */
 } sdk_cmd_request_t;
 
-typedef struct sdk_cmd_write {
-    uint64_t        data_len;
-    const uint8_t  *data;       /* points into rx buffer – do not free */
-} sdk_cmd_write_t;
-
-typedef struct sdk_cmd_write_ack {
-    uint32_t        ret_code;   /* 0 = success */
-} sdk_cmd_write_ack_t;
-
-typedef struct sdk_cmd_read {
-    uint64_t        read_len;
-    const uint8_t  *data;
-} sdk_cmd_read_t;
-
-typedef struct sdk_cmd_read_ack {
+typedef struct sdk_cmd_ack {
     uint32_t        ret_code;
     uint64_t        data_len;
     const uint8_t  *data;       /* points into rx buffer – do not free */
-} sdk_cmd_read_ack_t;
+} sdk_cmd_ack_t;
 
 /* -------------------------------------------------------------------------
  * Encode helpers (write into caller-supplied buffer)
  * ---------------------------------------------------------------------- */
 
 /**
- * sdk_cmd_encode_write - Serialise a write CMD sub-frame.
+ * sdk_cmd_encode_request - Serialise a write CMD sub-frame.
  *
  * @data:     Bytes to write.
  * @data_len: Number of bytes.
@@ -88,7 +74,7 @@ typedef struct sdk_cmd_read_ack {
  *
  * Returns 0 on success, -1 if @out_cap is too small.
  */
-int sdk_cmd_encode_write(const uint8_t *data, uint64_t data_len,
+int sdk_cmd_encode_request(uint8_t flag, const uint8_t *data, uint64_t data_len,
                          uint8_t *out, size_t out_cap, size_t *out_len);
 
 /**
@@ -96,12 +82,6 @@ int sdk_cmd_encode_write(const uint8_t *data, uint64_t data_len,
  */
 int sdk_cmd_encode_write_ack(uint32_t ret_code,
                               uint8_t *out, size_t out_cap, size_t *out_len);
-
-/**
- * sdk_cmd_encode_read - Serialise a read CMD sub-frame.
- */
-int sdk_cmd_encode_read(uint64_t read_len,
-                        uint8_t *out, size_t out_cap, size_t *out_len);
 
 /**
  * sdk_cmd_encode_read_ack - Serialise a read-ack CMD sub-frame.
@@ -124,10 +104,7 @@ int sdk_cmd_encode_ack(uint32_t ret_code, uint8_t cmd_flag,
  */
 uint8_t sdk_cmd_decode_flag(const uint8_t *payload, size_t payload_len);
 
-int sdk_cmd_decode_write    (const uint8_t *p, size_t len, sdk_cmd_write_t     *out);
-int sdk_cmd_decode_write_ack(const uint8_t *p, size_t len, sdk_cmd_write_ack_t *out);
-int sdk_cmd_decode_read     (const uint8_t *p, size_t len, sdk_cmd_read_t      *out);
-int sdk_cmd_decode_read_ack (const uint8_t *p, size_t len, sdk_cmd_read_ack_t  *out);
+int sdk_cmd_decode_ack(const uint8_t *p, size_t len, sdk_cmd_ack_t  *out);
 int sdk_cmd_decode_request(const uint8_t *p, size_t len, sdk_cmd_request_t *out);
 
 void free_ack_buf(void *addr);

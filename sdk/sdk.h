@@ -152,9 +152,10 @@ void sdk_release_image(sdk_handle_t *h, sdk_image_buf_t *img);
  * ---------------------------------------------------------------------- */
 
 /**
- * sdk_send_cmd_write - Send a write command to the server.
+ * sdk_send_cmd - Send a write command to the server.
  *
  * @h:          SDK handle.
+ * @flag:	CMD flag
  * @data:       Data to write.
  * @data_len:   Number of bytes.
  * @result:     Output; filled with the server's write-ack.
@@ -162,23 +163,9 @@ void sdk_release_image(sdk_handle_t *h, sdk_image_buf_t *img);
  *
  * Returns: SDK_OK on success.
  */
-sdk_err_t sdk_send_cmd_write(sdk_handle_t *h, const uint8_t *data,
+sdk_err_t sdk_send_cmd(sdk_handle_t *h, uint8_t flag, const uint8_t *data,
                               size_t data_len, sdk_cmd_result_t *result,
                               int timeout_ms);
-
-/**
- * sdk_send_cmd_read - Send a read command to the server.
- *
- * @h:          SDK handle.
- * @read_len:   Number of bytes to read.
- * @result:     Output; filled with the server's read-ack (including data).
- *              Caller must call sdk_cmd_result_free() on result->data.
- * @timeout_ms: How long to wait for the ack.
- *
- * Returns: SDK_OK on success.
- */
-sdk_err_t sdk_send_cmd_read(sdk_handle_t *h, uint64_t read_len,
-                             sdk_cmd_result_t *result, int timeout_ms);
 
 /* -------------------------------------------------------------------------
  * File interface

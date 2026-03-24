@@ -63,6 +63,7 @@ static void demo_sleep_ms(int ms)
 
 #include "sdk.h"
 #include "sdk_frame.h"   /* sdk_crc16 */
+#include "sdk_cmd.h"
 
 /* -------------------------------------------------------------------------
  * Global test state
@@ -258,7 +259,7 @@ static void test_cmd_write(sdk_handle_t *h)
     printf("\n[Case 4] CMD write\n");
 
     memset(&res, 0, sizeof(res));
-    err = sdk_send_cmd_write(h, payload, sizeof(payload), &res, CMD_TIMEOUT_MS);
+    err = sdk_send_cmd(h, SDK_CMD_FLAG_WRITE, payload, sizeof(payload), &res, CMD_TIMEOUT_MS);
 
     CHECK_SDK(err,           "sdk_send_cmd_write returns SDK_OK");
     CHECK(res.ret_code == 0, "write ack ret_code == 0");
@@ -279,11 +280,12 @@ static void test_cmd_read(sdk_handle_t *h)
 {
     sdk_cmd_result_t res;
     sdk_err_t        err;
+    const uint8_t    rd[] = { 0xAA, 0xBB, 0xCC, 0xDD };
 
     printf("\n[Case 5] CMD read (request %d bytes)\n", READ_LEN);
 
     memset(&res, 0, sizeof(res));
-    err = sdk_send_cmd_read(h, READ_LEN, &res, CMD_TIMEOUT_MS);
+    err = sdk_send_cmd(h, SDK_CMD_FLAG_READ, rd, sizeof(rd), &res, CMD_TIMEOUT_MS);
 
     CHECK_SDK(err,                          "sdk_send_cmd_read returns SDK_OK");
     CHECK(res.ret_code == 0,                "read ack ret_code == 0");
@@ -402,6 +404,7 @@ static void test_stress(sdk_handle_t *h)
         size_t           flen = 0;
         sdk_err_t        err;
         const uint8_t    wr[] = { 0xAA, 0xBB, 0xCC, 0xDD };
+        const uint8_t    rd[] = { 0xAA, 0xBB, 0xCC, 0xDD };
 
         printf("  round %d/%d\n", round + 1, STRESS_ROUNDS);
 
@@ -412,7 +415,7 @@ static void test_stress(sdk_handle_t *h)
 
         /* cmd write */
         memset(&res, 0, sizeof(res));
-        err = sdk_send_cmd_write(h, wr, sizeof(wr), &res, CMD_TIMEOUT_MS);
+        err = sdk_send_cmd(h, SDK_CMD_FLAG_WRITE, wr, sizeof(wr), &res, CMD_TIMEOUT_MS);
         if (err != SDK_OK || res.ret_code != 0)
             { all_ok = 0; printf("    cmd_write : FAIL\n"); }
         else
@@ -421,7 +424,7 @@ static void test_stress(sdk_handle_t *h)
 
         /* cmd read */
         memset(&res, 0, sizeof(res));
-        err = sdk_send_cmd_read(h, 8, &res, CMD_TIMEOUT_MS);
+        err = sdk_send_cmd(h, SDK_CMD_FLAG_READ, rd, sizeof(rd), &res, CMD_TIMEOUT_MS);
         if (err != SDK_OK || !res.data || res.data_len == 0)
             { all_ok = 0; printf("    cmd_read  : FAIL\n"); }
         else
@@ -461,10 +464,10 @@ static void test_bad_params(sdk_handle_t *h)
     printf("\n[Case 9] Bad-parameter guard\n");
 
     /* ---- NULL sdk handle ---- */
-    err = sdk_send_cmd_write(NULL, &dummy, 1, &res, 1000);
+    err = sdk_send_cmd(NULL, SDK_CMD_FLAG_WRITE, &dummy, 1, &res, 1000);
     CHECK(err != SDK_OK, "cmd_write  NULL handle -> error");
 
-    err = sdk_send_cmd_read(NULL, 4, &res, 1000);
+    err = sdk_send_cmd(NULL, SDK_CMD_FLAG_READ, &dummy, 1, &res, 1000);
     CHECK(err != SDK_OK, "cmd_read   NULL handle -> error");
 
     err = sdk_send_file(NULL, "/tmp/x", &dummy, 1, 1000);
@@ -474,10 +477,10 @@ static void test_bad_params(sdk_handle_t *h)
     CHECK(err != SDK_OK, "recv_file  NULL handle -> error");
 
     /* ---- NULL result / output pointers ---- */
-    err = sdk_send_cmd_write(h, &dummy, 1, NULL, 1000);
+    err = sdk_send_cmd(h, SDK_CMD_FLAG_WRITE, &dummy, 1, NULL, 1000);
     CHECK(err != SDK_OK, "cmd_write  NULL result -> error");
 
-    err = sdk_send_cmd_read(h, 4, NULL, 1000);
+    err = sdk_send_cmd(h, SDK_CMD_FLAG_READ, &dummy, 1, NULL, 1000);
     CHECK(err != SDK_OK, "cmd_read   NULL result -> error");
 
     /* ---- NULL remote path ---- */
@@ -545,7 +548,7 @@ static void test_reconnect(void)
 
         /* cmd write */
         memset(&res, 0, sizeof(res));
-        err = sdk_send_cmd_write(h, wr, sizeof(wr), &res, CMD_TIMEOUT_MS);
+        err = sdk_send_cmd(h, SDK_CMD_FLAG_WRITE, wr, sizeof(wr), &res, CMD_TIMEOUT_MS);
         snprintf(tag, sizeof(tag), "round %d: cmd_write ok", round + 1);
         CHECK(err == SDK_OK && res.ret_code == 0, tag);
         sdk_cmd_result_free(&res);

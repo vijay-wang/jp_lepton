@@ -541,22 +541,21 @@ void sdk_cmd_result_free(sdk_cmd_result_t *r)
     r->data_len = 0;
 }
 
-sdk_err_t sdk_send_cmd_write(sdk_handle_t *h, const uint8_t *data,
-                              size_t data_len, sdk_cmd_result_t *result,
-                              int timeout_ms)
+sdk_err_t sdk_send_cmd(sdk_handle_t *h, uint8_t flag, const uint8_t *data,
+                              size_t data_len, sdk_cmd_result_t *result, int timeout_ms)
 {
     uint8_t  tmp[1 + SDK_CMD_RESERVED_SIZE + 8 + 65536];
     size_t   enc_len = 0;
     uint8_t *rsp     = NULL;
     size_t   rsp_len = 0;
-    sdk_cmd_write_ack_t ack;
+    sdk_cmd_ack_t ack;
     int tms;
 
     if (!h || !h->connected || !result) return SDK_ERR_PARAM;
 
     tms = timeout_ms > 0 ? timeout_ms : h->cfg.cmd_timeout_ms;
 
-    if (sdk_cmd_encode_write(data, (uint64_t)data_len,
+    if (sdk_cmd_encode_request(flag, data, (uint64_t)data_len,
                              tmp, sizeof(tmp), &enc_len) != 0)
         return SDK_ERR_PARAM;
 
@@ -568,44 +567,7 @@ sdk_err_t sdk_send_cmd_write(sdk_handle_t *h, const uint8_t *data,
     if (sdk_pending_wait(&h->pending, tms, &rsp, &rsp_len) != 0)
         return SDK_ERR_TIMEOUT;
 
-    if (sdk_cmd_decode_write_ack(rsp, rsp_len, &ack) != 0) {
-        free(rsp);
-        return SDK_ERR_PROTO;
-    }
-
-    free(rsp);
-    result->ret_code = ack.ret_code;
-    result->data     = NULL;
-    result->data_len = 0;
-    return SDK_OK;
-}
-
-sdk_err_t sdk_send_cmd_read(sdk_handle_t *h, uint64_t read_len,
-                             sdk_cmd_result_t *result, int timeout_ms)
-{
-    uint8_t  tmp[1 + SDK_CMD_RESERVED_SIZE + 8];
-    size_t   enc_len = 0;
-    uint8_t *rsp     = NULL;
-    size_t   rsp_len = 0;
-    sdk_cmd_read_ack_t ack;
-    int tms;
-
-    if (!h || !h->connected || !result) return SDK_ERR_PARAM;
-
-    tms = timeout_ms > 0 ? timeout_ms : h->cfg.cmd_timeout_ms;
-
-    if (sdk_cmd_encode_read(read_len, tmp, sizeof(tmp), &enc_len) != 0)
-        return SDK_ERR_PARAM;
-
-    sdk_pending_arm(&h->pending);
-
-    if (sdk_send_frame(h, SDK_FRAME_TYPE_CMD, tmp, enc_len) != 0)
-        return SDK_ERR_NET;
-
-    if (sdk_pending_wait(&h->pending, tms, &rsp, &rsp_len) != 0)
-        return SDK_ERR_TIMEOUT;
-
-    if (sdk_cmd_decode_read_ack(rsp, rsp_len, &ack) != 0) {
+    if (sdk_cmd_decode_ack(rsp, rsp_len, &ack) != 0) {
         free(rsp);
         return SDK_ERR_PROTO;
     }
