@@ -11,9 +11,7 @@
  *   - Pointer asterisk adjacent to the variable name
  */
 
-#ifdef _WIN32
-#error "unix_net.c must be compiled only for Linux/Unix targets."
-#endif
+#ifdef __linux__
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -315,3 +313,5 @@ unix_net_recv(net_socket_t *sock, void *buf, size_t buf_len, size_t *received)
 
 	return NET_OK;
 }
+
+#endif

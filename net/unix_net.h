@@ -9,9 +9,7 @@
 #ifndef UNIX_NET_H
 #define UNIX_NET_H
 
-#ifdef _WIN32
-#error "unix_net.h must not be included on Windows builds."
-#endif
+#ifdef __linux__
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -137,5 +135,7 @@ net_err_t unix_net_recv(net_socket_t *sock, void *buf, size_t buf_len,
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* __linux__ */
 
 #endif /* UNIX_NET_H */

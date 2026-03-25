@@ -9,9 +9,7 @@
 #ifndef WIN_NET_H
 #define WIN_NET_H
 
-#ifndef _WIN32
-#error "win_net.h may only be included on Windows builds."
-#endif
+#ifdef _WIN32
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -117,5 +115,7 @@ net_err_t WinNetRecv(net_socket_t *pSock, void *pBuf, size_t BufLen,
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _WIN32 */
 
 #endif /* WIN_NET_H */

@@ -10,9 +10,7 @@
  *   - Hungarian-style pointer prefix (p)
  */
 
-#ifndef _WIN32
-#error "win_net.c must be compiled only for Windows targets."
-#endif
+#ifdef _WIN32
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -324,3 +322,5 @@ net_err_t WinNetRecv(net_socket_t *pSock, void *pBuf, size_t BufLen,
 
     return NET_OK;
 }
+
+#endif
