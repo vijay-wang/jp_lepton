@@ -5,7 +5,7 @@ project(lepton_controller)
 
 set(SHMQ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shmq)
 
-file(GLOB SHMQ_SOURCES "${SHMQ_DIR}/*.c" "${SHMQ_DIR}/*.cpp")
+file(GLOB SHMQ_SOURCES "${SHMQ_DIR}/*.c")
 add_library(shmq_objects OBJECT ${SHMQ_SOURCES})
 target_include_directories(shmq_objects PRIVATE ${SHMQ_DIR})
 
