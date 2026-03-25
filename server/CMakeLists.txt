@@ -10,6 +10,8 @@ add_executable(data_router ${CURRENT_SOURCES}
 	$<TARGET_OBJECTS:net_objects>
 )
 
+target_link_libraries(data_router PRIVATE pthread)
+
 target_include_directories(data_router PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${SHMQ_DIR}

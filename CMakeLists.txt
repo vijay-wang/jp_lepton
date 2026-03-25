@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(device_sdk_server C)
 
+message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "Using CXX compiler: ${CMAKE_CXX_COMPILER}")
+
 set(SHMQ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shmq)
 set(NET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/net)
 set(SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/sdk)
@@ -20,14 +23,26 @@ file(GLOB SDK_SOURCES "${SDK_DIR}/*.c")
 add_library(sdk_objects OBJECT ${SDK_SOURCES})
 target_include_directories(sdk_objects PRIVATE ${SDK_DIR})
 
-add_subdirectory(./demo)
+if(BUILD_DEMO OR BUILD_ALL)
+	add_subdirectory(./demo)
+endif()
 
-add_subdirectory(./lepton_sdk)
+if(BUILD_LEPTON_SDK OR BUILD_ALL)
+	add_subdirectory(./lepton_sdk)
+endif()
 
-add_subdirectory(./lepton_data_collector)
+if(BUILD_LEPTON_DATA_COLLECTOR OR BUILD_ALL)
+	add_subdirectory(./lepton_data_collector)
+endif()
 
-add_subdirectory(./lepton_controller)
+if(BUILD_LEPTON_CONTROLLER OR BUILD_ALL)
+	add_subdirectory(./lepton_controller)
+endif()
 
-add_subdirectory(./server)
+if(BUILD_SERVER OR BUILD_ALL)
+	add_subdirectory(./server)
+endif()
 
-add_subdirectory(./sdk)
+if(BUILD_SDK OR BUILD_ALL)
+	add_subdirectory(./sdk)
+endif()
