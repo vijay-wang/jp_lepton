@@ -18,11 +18,11 @@
 #include <time.h>
 #include <sys/ioctl.h>
 
-#include "../net/net.h"
-#include "../sdk/sdk_frame.h"
-#include "../sdk/sdk_image.h"
-#include "../sdk/sdk_cmd.h"
-#include "../sdk/sdk_file.h"
+#include "net.h"
+#include "sdk_frame.h"
+#include "sdk_image.h"
+#include "sdk_cmd.h"
+#include "sdk_file.h"
 #include "server_session.h"
 #include "shmq.h"
 
