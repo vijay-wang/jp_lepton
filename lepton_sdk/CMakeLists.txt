@@ -24,14 +24,14 @@ set_target_properties(lepton_sdk_shared PROPERTIES
 )
 
 if(WIN32)
-	set_target_properties(mylib_shared PROPERTIES
+	set_target_properties(lepton_sdk_shared PROPERTIES
 		ARCHIVE_OUTPUT_NAME "lepton_sdk.dll"
 		RUNTIME_OUTPUT_NAME "lepton_sdk"
 		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 		)
 
-	set_target_properties(mylib_static PROPERTIES
+	set_target_properties(lepton_sdk_static PROPERTIES
 		ARCHIVE_OUTPUT_NAME "lepton_sdk"
 		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/static"
 		)
