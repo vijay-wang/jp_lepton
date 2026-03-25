@@ -1,58 +1,33 @@
 cmake_minimum_required(VERSION 3.15)
 project(device_sdk_server C)
 
-set(CMAKE_C_STANDARD 99)
-add_compile_options(-D_POSIX_C_SOURCE=200809L)
+set(SHMQ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shmq)
+set(NET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/net)
+set(SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/sdk)
 
-# ------------------------------------------------------------------
-# Platform detection
-# ------------------------------------------------------------------
-if(WIN32)
-    set(NET_PLATFORM_SRC net/win_net.c)
-    set(PLATFORM_LIBS    ws2_32)
-    add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
-else()
-    set(NET_PLATFORM_SRC net/unix_net.c)
-    set(PLATFORM_LIBS    pthread)
-endif()
+file(GLOB SHMQ_SOURCES "${SHMQ_DIR}/*.c")
+add_library(shmq_objects OBJECT ${SHMQ_SOURCES})
+target_include_directories(shmq_objects PRIVATE ${SHMQ_DIR})
 
-# ------------------------------------------------------------------
-# net  – static library (shared by sdk and server)
-# ------------------------------------------------------------------
-add_library(net STATIC
-    net/net.c
-    ${NET_PLATFORM_SRC}
-)
-target_include_directories(net PUBLIC net)
-target_link_libraries(net ${PLATFORM_LIBS})
+file(GLOB NET_SOURCES "${NET_DIR}/*.c")
+add_library(net_objects OBJECT ${NET_SOURCES})
+set_target_properties(net_objects PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	)
+target_include_directories(net_objects PRIVATE ${NET_DIR})
 
-# ------------------------------------------------------------------
-# sdk  – static library (cross-platform, links net)
-# ------------------------------------------------------------------
-add_library(sdk STATIC
-    sdk/sdk_frame.c
-    sdk/sdk_image.c
-    sdk/sdk_cmd.c
-    sdk/sdk_file.c
-    sdk/sdk.c
-)
-target_include_directories(sdk PUBLIC sdk net)
-target_link_libraries(sdk net)
-
-# ------------------------------------------------------------------
-# server  – executable (Linux only, links sdk + net)
-# ------------------------------------------------------------------
-if(NOT WIN32)
-    add_executable(server
-        server/main.c
-        server/server.c
-        server/server_session.c
-        server/shmq.c
-    )
-    target_include_directories(server PRIVATE sdk net server)
-    target_link_libraries(server sdk net)
-endif()
+file(GLOB SDK_SOURCES "${SDK_DIR}/*.c")
+add_library(sdk_objects OBJECT ${SDK_SOURCES})
+target_include_directories(sdk_objects PRIVATE ${SDK_DIR})
 
 add_subdirectory(./demo)
 
 add_subdirectory(./lepton_sdk)
+
+add_subdirectory(./lepton_data_collector)
+
+add_subdirectory(./lepton_controller)
+
+add_subdirectory(./server)
+
+add_subdirectory(./sdk)

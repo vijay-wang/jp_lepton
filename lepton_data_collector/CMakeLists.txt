@@ -3,12 +3,6 @@ project(lepton_data_collector)
 
 #set(CMAKE_C_STANDARD 11)
 
-set(SHMQ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shmq)
-
-file(GLOB SHMQ_SOURCES "${SHMQ_DIR}/*.c" "${SHMQ_DIR}/*.cpp")
-add_library(shmq_objects OBJECT ${SHMQ_SOURCES})
-target_include_directories(shmq_objects PRIVATE ${SHMQ_DIR})
-
 file(GLOB CURRENT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 add_executable(lepton_data_collector ${CURRENT_SOURCES} $<TARGET_OBJECTS:shmq_objects>)
 target_include_directories(lepton_data_collector PRIVATE
