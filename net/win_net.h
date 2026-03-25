@@ -6,8 +6,8 @@
  * Follows Microsoft C code style conventions.
  */
 
-#ifndef WIN_NET_H
-#define WIN_NET_H
+#ifndef _WIN_NET_H
+#define _WIN_NET_H
 
 #ifdef _WIN32
 
@@ -118,4 +118,4 @@ net_err_t WinNetRecv(net_socket_t *pSock, void *pBuf, size_t BufLen,
 
 #endif /* _WIN32 */
 
-#endif /* WIN_NET_H */
+#endif /* _WIN_NET_H */

@@ -7,8 +7,8 @@
  * unix_net.c (Linux). This header is the sole public interface.
  */
 
-#ifndef NET_H
-#define NET_H
+#ifndef _NET_H
+#define _NET_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -198,4 +198,4 @@ const char *net_strerror(net_err_t err);
 }
 #endif
 
-#endif /* NET_H */
+#endif /* _NET_H */

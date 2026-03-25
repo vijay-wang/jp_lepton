@@ -6,8 +6,8 @@
  * Follows Linux kernel coding style.
  */
 
-#ifndef UNIX_NET_H
-#define UNIX_NET_H
+#ifndef _UNIX_NET_H
+#define _UNIX_NET_H
 
 #ifdef __linux__
 
@@ -138,4 +138,4 @@ net_err_t unix_net_recv(net_socket_t *sock, void *buf, size_t buf_len,
 
 #endif /* __linux__ */
 
-#endif /* UNIX_NET_H */
+#endif /* _UNIX_NET_H */
