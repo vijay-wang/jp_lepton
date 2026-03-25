@@ -13,6 +13,7 @@ add_library(net_static STATIC ${SOURCES})
 target_include_directories(net_static PUBLIC ./)
 set_target_properties(net_static PROPERTIES
 	OUTPUT_NAME "net"
+	POSITION_INDEPENDENT_CODE ON
 )
 
 add_library(net_shared  SHARED ${SOURCES})
