@@ -38,6 +38,14 @@ int main(int argc, char *argv[])
 		goto connect_failed;
 	}
 
+	portDesc.cci_handle = h;
+	portDesc.portType = LEP_CCI_TWI;
+	result = LEP_SelectDevice(&portDesc, MAC_COM);
+	if (result != LEP_OK) {
+		fprintf(stderr, "LEP_SelectDevice failed");
+		goto select_dev_failed;
+	}
+
 	result = LEP_OpenPort(0, LEP_CCI_TWI, 0, &portDesc);
 	if (result != LEP_OK) {
 		fprintf(stderr, "LEP_OpenPort failed");
@@ -54,19 +62,12 @@ int main(int argc, char *argv[])
 	if (result != LEP_OK)
 		fprintf(stderr, "LEP_SetSysShutterPosition failed");
 
-	portDesc.cci_handle = h;
-	result = LEP_SelectDevice(&portDesc, MAC_COM);
-	if (result != LEP_OK) {
-		fprintf(stderr, "LEP_SelectDevice failed");
-		goto select_dev_failed;
-	}
-
 	LEP_GetSDKVersion(&portDesc, &version);
 	printf("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
 
 
-select_dev_failed:
 	LEP_ClosePort(&portDesc);
+select_dev_failed:
 open_port_failed:
 	sdk_disconnect(h);
 connect_failed:

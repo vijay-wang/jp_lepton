@@ -94,21 +94,15 @@ static void process_image(const void *p, int size)
 	int lc_errs = 0;
 	struct shmq_buf_desc d = { .queue_id = qid };
 
-	if (is_subframe_index_valid(&lep_info, (unsigned short *)p) == 0) {
-	        fflush(stderr);
-	        fprintf(stderr, "subframe index is not valid\n");
+	if (is_subframe_index_valid(&lep_info, (unsigned short *)p) == 0)
 		return;
-	}
 
 	lc_errs = extract_pixel_data(&lep_info, (unsigned short *)p, pixel_data, &done);
-	if (done != 1) {
-	        fflush(stderr);
-	        fprintf(stderr, "extract pixel data fialed, error line count:%d\n", lc_errs);
+	if (done != 1)
 		return;
-	}
 
 	/* if true, save image data to file */
-	if (frame_number < frame_count)
+	if (to_file && frame_number < frame_count)
 	{
 		/* Either a Lepton 2.X frame was received, or
 		 * the last subframe of a Lepton 3.X frame was
@@ -123,15 +117,17 @@ static void process_image(const void *p, int size)
 					out_file);
 			fclose(out_file);
 			/* image stored */
-			fflush(stderr);
-			fprintf(stderr, "*");
+			fflush(stdout);
+			fprintf(stderr, "save %s\n", out_path);
 		}
 		else {
 			/* failed to store image frame */
 			fflush(stderr);
-			fprintf(stderr, "G");
+			fprintf(stderr, "failed save %s\n", out_path);
 		}
 		frame_number++;
+	} else {
+		to_file = 0;
 	}
 
 	if (to_shmq) {
@@ -272,9 +268,7 @@ static void mainloop(void)
 		if (0 == r)
 			fprintf(stderr, "select timeout\n");
 
-		if (read_frame())
-			break;
-		/* EAGAIN - continue select loop. */
+		read_frame();
 	}
 }
 
@@ -648,7 +642,7 @@ static void usage(FILE *fp, int argc, char **argv)
                  argv[0], dev_name, frame_count);
 }
 
-static const char short_options[] = "23d:hmruo:fc:t:";
+static const char short_options[] = "23d:hmruo:fc:t:s";
 
 static const struct option
 long_options[] = {
@@ -798,7 +792,7 @@ int main(int argc, char **argv)
 	qid = shmq_create_queue(fd_q, "lpt_img_shmq", 8, sz_shmq);
 	shmq_set_timeout(fd_q, qid, 500);
 	pool = shmq_map_queue(fd_q, qid, &pool_sz);
-	fprintf(stderr, "pool size:%ld\n", pool_sz);
+	fprintf(stdout, "pool size:%ld\n", pool_sz);
         open_device();
         init_device();
         start_capturing();
@@ -807,10 +801,10 @@ int main(int argc, char **argv)
         uninit_device();
         close_device();
         free(pixel_data);
-        fprintf(stderr, "\n");
 	shmq_munmap_queue(pool, pool_sz);
 	shmq_destroy_queue(fd_q, qid);
 	shmq_close_dev(fd_q);
+        fprintf(stdout, "exit lepton_data_collector\n");
 
         return 0;
 }

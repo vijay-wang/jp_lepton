@@ -276,7 +276,7 @@ static void *img_thread_fn(void *arg)
 	}
 
 	shmq_fd = shmq_open_dev();
-	if (shmq_fd != 0) {
+	if (shmq_fd <= 0) {
 		fprintf(stderr, "open shmq device failed\n");
 		goto open_dev_failed;
 	}
@@ -289,7 +289,7 @@ static void *img_thread_fn(void *arg)
 	}
 
 	desc.queue_id = lk.queue_id;
-	fprintf(stdout, "lookup qid = %d\n", lk.queue_id);
+	fprintf(stdout, "lookup %s qid = %d\n", lk.name, lk.queue_id);
 
 	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
 	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
@@ -351,7 +351,7 @@ static void *cmd_thread_fn(void *arg)
 	int r;
 
 	shmq_fd = shmq_open_dev();
-	if (shmq_fd != 0) {
+	if (shmq_fd <= 0) {
 		fprintf(stderr, "open shmq device failed\n");
 		return NULL;
 	}
