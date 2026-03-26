@@ -18,3 +18,7 @@ target_include_directories(data_router PRIVATE
     ${SDK_DIR}
     ${NET_DIR}
 )
+
+install(TARGETS data_router
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

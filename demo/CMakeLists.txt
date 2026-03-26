@@ -38,3 +38,7 @@ add_executable(sdk_demo
 )
 target_link_libraries(sdk_demo PRIVATE sdk_shared lepton_sdk_shared pthread m dl)
 target_include_directories(sdk_demo PRIVATE ${SDK_DIR} ${LEPTON_SDK_DIR})
+
+install(TARGETS sdk_demo
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

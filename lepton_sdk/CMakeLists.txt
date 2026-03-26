@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 project(lepton_sdk)
 
 file(GLOB_RECURSE SOURCES
-    "./*.c"
+	"./*.c"
 )
 
 file(GLOB_RECURSE HEADERS
-    "./*.h"
+	"./*.h"
 )
 
 add_definitions(-DI2C_DEVICE_FILE="/dev/i2c-2")
@@ -29,16 +29,34 @@ if(WIN32)
 		RUNTIME_OUTPUT_NAME "lepton_sdk"
 		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-		)
+	)
 
 	set_target_properties(lepton_sdk_static PROPERTIES
 		ARCHIVE_OUTPUT_NAME "lepton_sdk"
 		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/static"
-		)
+	)
 endif()
 
-#install(FILES ${HEADERS} DESTINATION include)
-#install(TARGETS mylib_static mylib_shared
-#    LIBRARY DESTINATION lib
-#    ARCHIVE DESTINATION lib
-#)
+file(GLOB_RECURSE LEPTON_SDK_HEADERS
+	"./LEPTON_AGC.h"
+	"./LEPTON_CFG.h"
+	"./LEPTON_ErrorCodes.h"
+	"./LEPTON_Macros.h"
+	"./LEPTON_OEM.h"
+	"./LEPTON_RAD.h"
+	"./LEPTON_SDKConfig.h"
+	"./LEPTON_SDK.h"
+	"./LEPTON_SYS.h"
+	"./LEPTON_Types.h"
+	"./LEPTON_VID.h"
+)
+
+
+install(FILES ${LEPTON_SDK_HEADERS}
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(TARGETS lepton_sdk_static lepton_sdk_shared
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

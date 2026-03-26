@@ -9,3 +9,7 @@ target_include_directories(lepton_controller PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${SHMQ_DIR}
 )
+
+install(TARGETS lepton_controller
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
