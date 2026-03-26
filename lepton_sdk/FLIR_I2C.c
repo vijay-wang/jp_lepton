@@ -151,7 +151,7 @@ LEP_RESULT DEV_I2C_MasterSelectDevice(LEP_PROTOCOL_DEVICE_E device, void *cci_ha
 
 static int decode_mac_com_packet(LEP_UINT8 *data, LEP_MAC_COM_PACKET_T *packet)
 {
-	if (data = NULL)
+	if (data == NULL)
 		return -1;
 
 	packet->i2c_flag = data[0];
@@ -159,7 +159,7 @@ static int decode_mac_com_packet(LEP_UINT8 *data, LEP_MAC_COM_PACKET_T *packet)
 	packet->words_transfer = data[3] | data[4] << 8;
 	packet->data = &data[5];
 
-	if (packet->words_transfer)
+	if (packet->words_transfer == 0)
 		packet->data = NULL;
 
 	return 0;
@@ -167,7 +167,9 @@ static int decode_mac_com_packet(LEP_UINT8 *data, LEP_MAC_COM_PACKET_T *packet)
 
 static int encode_mac_com_packet(LEP_UINT8 *data, LEP_UINT16 *out_len, LEP_MAC_COM_PACKET_T *packet)
 {
-	if (data = NULL)
+	size_t len;
+
+	if (data == NULL)
 		return -1;
 
 	data[0] = packet->i2c_flag;
@@ -175,13 +177,14 @@ static int encode_mac_com_packet(LEP_UINT8 *data, LEP_UINT16 *out_len, LEP_MAC_C
 	data[2] = (packet->reg_addr & 0xff00) >> 8;
 	data[3] = packet->words_transfer & 0x00ff;
 	data[4] = (packet->words_transfer & 0xff00) >> 8;
-	*out_len = 5;
+	len = 5;
 
 	if (packet->words_transfer && packet->data) {
 		memcpy(&data[5], packet->data, packet->words_transfer * sizeof(short));
-		*out_len += packet->words_transfer * sizeof(short);
+		len += packet->words_transfer * sizeof(short);
 	}
 
+	*out_len = len;
 	return 0;
 }
 
@@ -458,7 +461,8 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 	LEP_UINT16 *dataPtr;
 	LEP_UINT16 *writePtr;
 
-	*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+	if (masterDevice != MAC_COM)
+		*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
 
 
 	switch(masterDevice)
@@ -610,12 +614,14 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 	LEP_UINT16 *dataPtr;
 	LEP_UINT16 *txPtr;
 
-	*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
-	dataPtr = (LEP_UINT16*)&writeDataPtr[0];
-	txPtr = (LEP_UINT16*)&txdata[ADDRESS_SIZE_BYTES];
-	while(wordsToWrite--){
-		*txPtr++ = (LEP_UINT16)REVERSE_ENDIENESS_UINT16(*dataPtr);
-		dataPtr++;
+	if (masterDevice != MAC_COM) {
+		*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+		dataPtr = (LEP_UINT16*)&writeDataPtr[0];
+		txPtr = (LEP_UINT16*)&txdata[ADDRESS_SIZE_BYTES];
+		while(wordsToWrite--){
+			*txPtr++ = (LEP_UINT16)REVERSE_ENDIENESS_UINT16(*dataPtr);
+			dataPtr++;
+		}
 	}
 
 	switch(masterDevice)
