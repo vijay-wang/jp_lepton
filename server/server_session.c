@@ -25,6 +25,7 @@
 #include "sdk_file.h"
 #include "server_session.h"
 #include "shmq.h"
+#include "log.h"
 
 /* -----------------------------------------------------------------------
  * Receive buffer (mirrors sdk.c rx_buf_t)
@@ -271,25 +272,25 @@ static void *img_thread_fn(void *arg)
 	uint8_t *frame    = calloc(1, total);
 
 	if (!frame) {
-		fprintf(stderr, "[server] img thread: alloc failed\n");
+		pr_err("[server] img thread: alloc failed\n");
 		return NULL;
 	}
 
 	shmq_fd = shmq_open_dev();
 	if (shmq_fd <= 0) {
-		fprintf(stderr, "open shmq device failed\n");
+		pr_err("open shmq device failed\n");
 		goto open_dev_failed;
 	}
 
 	strcpy(lk.name, "lpt_img_shmq");
 	ret = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
 	if (ret != 0) {
-		fprintf(stderr, "lookup %s failed\n", lk.name);
+		pr_err("lookup %s failed\n", lk.name);
 		goto lookup_failed;
 	}
 
 	desc.queue_id = lk.queue_id;
-	fprintf(stdout, "lookup %s qid = %d\n", lk.name, lk.queue_id);
+	pr_info("lookup %s qid = %d\n", lk.name, lk.queue_id);
 
 	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
 	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
@@ -306,20 +307,20 @@ static void *img_thread_fn(void *arg)
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
 		if (ret != 0) {
-			fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
 			continue;
 		}
 
 		memcpy(frame, pool + desc.offset, desc.data_size);
 
 		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, frame, total) != 0) {
-			fprintf(stderr, "sess_send_frame failed\n");
+			pr_err("sess_send_frame failed\n");
 			continue;
 		}
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_RELEASE, &desc);
 		if (ret != 0)
-			fprintf(stderr, "SHMQ_IOC_RELEASE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_RELEASE failed, ret:%d\n", ret);
 	}
 
 	shmq_munmap_queue(pool, pool_sz);
@@ -352,7 +353,7 @@ static void *cmd_thread_fn(void *arg)
 
 	shmq_fd = shmq_open_dev();
 	if (shmq_fd <= 0) {
-		fprintf(stderr, "open shmq device failed\n");
+		pr_err("open shmq device failed\n");
 		return NULL;
 	}
 
@@ -360,29 +361,29 @@ static void *cmd_thread_fn(void *arg)
 	strcpy(lk.name, "lpt_cmd_in");
 	r = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
 	if (r != 0) {
-		fprintf(stderr, "lookup %s failed\n", lk.name);
+		pr_err("lookup %s failed\n", lk.name);
 		goto lookup_failed;
 	}
 
 	in_desc.queue_id = lk.queue_id;
 	shmq_set_timeout(shmq_fd, in_desc.queue_id, 500);
 	in_pool = shmq_map_queue(shmq_fd, lk.queue_id, &in_pool_sz);
-	fprintf(stdout, "lookup lpt_cmd_in qid = %d\n", lk.queue_id);
+	pr_info("lookup lpt_cmd_in qid = %d\n", lk.queue_id);
 
 	/* lookup and mmap lpt_cmd_out */
 	strcpy(lk.name, "lpt_cmd_out");
 	r = ioctl(shmq_fd, SHMQ_IOC_LOOKUP, &lk);
 	if (r != 0) {
-		fprintf(stderr, "lookup %s failed\n", lk.name);
+		pr_err("lookup %s failed\n", lk.name);
 		goto lookup_failed;
 	}
 
 	out_desc.queue_id = lk.queue_id;
 	shmq_set_timeout(shmq_fd, out_desc.queue_id, 500);
 	out_pool = shmq_map_queue(shmq_fd, lk.queue_id, &out_pool_sz);
-	fprintf(stdout, "lookup lpt_cmd_out qid = %d\n", lk.queue_id);
+	pr_info("lookup lpt_cmd_out qid = %d\n", lk.queue_id);
 
-	for (;;) {
+	while (atomic_load(&sess->running)) {
 		struct queued_frame qf;
 		uint8_t flag;
 		sdk_cmd_request_t request;
@@ -403,7 +404,7 @@ get_free:
 		/* cmd request */
 		r = ioctl(shmq_fd, SHMQ_IOC_GET_FREE, &in_desc);
 		if (r < 0) {
-			fprintf(stderr, "SHMQ_IOC_GET_FREE failed, ret:%d\n", r);
+			pr_err("SHMQ_IOC_GET_FREE failed, ret:%d\n", r);
 			goto get_free;
 		}
 
@@ -417,7 +418,7 @@ dequeue:
 		/* cmd ack */
 		r = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &out_desc);
 		if (r != 0) {
-			fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d\n", r);
+			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", r);
 			goto dequeue;
 		}
 
@@ -481,7 +482,7 @@ static void *file_thread_fn(void *arg)
 				continue;
 			}
 
-			printf("[server] File read request: %s\n", req.path);
+			pr_info("[server] File read request: %s\n", req.path);
 
 			if (stat(req.path, &st) == 0 && S_ISREG(st.st_mode)) {
 				int fd = open(req.path, O_RDONLY);
@@ -583,8 +584,7 @@ static void *file_thread_fn(void *arg)
 					}
 
 					if (retry == SDK_FILE_MAX_RETRY) {
-						fprintf(stderr,
-							"[server] read: ack "
+						pr_err("[server] read: ack "
 							"timeout seq %u\n",
 							seq);
 						break;
@@ -609,7 +609,7 @@ static void *file_thread_fn(void *arg)
 				continue;
 			}
 
-			printf("[server] File write: %s  %llu bytes\n",
+			pr_info("[server] File write: %s  %llu bytes\n",
 			       wreq.path,
 			       (unsigned long long)wreq.file_len);
 
@@ -639,8 +639,7 @@ static void *file_thread_fn(void *arg)
 
 				if (fq_pop(&sess->file_queue, &sf,
 					   SDK_FILE_TIMEOUT_MS) != 0) {
-					fprintf(stderr,
-						"[server] write: seqN "
+					pr_err( "[server] write: seqN "
 						"timeout\n");
 					break;
 				}
@@ -674,12 +673,11 @@ static void *file_thread_fn(void *arg)
 						       (size_t)wreq.file_len,
 						       fp);
 						fclose(fp);
-						printf("[server] Saved %s\n",
+						pr_info("[server] Saved %s\n",
 						       wreq.path);
 					}
 				} else {
-					fprintf(stderr,
-						"[server] write CRC "
+					pr_err( "[server] write CRC "
 						"mismatch\n");
 				}
 			}
@@ -704,7 +702,7 @@ static void *rx_thread_fn(void *arg)
 	uint8_t                tmp[RX_CHUNK];
 
 	if (rxbuf_init(&rbuf) != 0) {
-		fprintf(stderr, "[server] rx alloc failed\n");
+		pr_err("[server] rx alloc failed\n");
 		goto notify;
 	}
 
@@ -717,7 +715,7 @@ static void *rx_thread_fn(void *arg)
 			break;
 
 		if (rxbuf_append(&rbuf, tmp, received) != 0) {
-			fprintf(stderr, "[server] rx buf overflow\n");
+			pr_err("[server] rx buf overflow\n");
 			break;
 		}
 

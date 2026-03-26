@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include "lepton_i2c.h"
 #include "shmq.h"
+#include "log.h"
 
 enum {
 	I2C_READ,
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, sig_proc);
 
 	if (argc == 1) {
-		printf("usage:%s /dev/i2c-X\n", argv[0]);
+		pr_info("usage:%s /dev/i2c-X\n", argv[0]);
 		return -1;
 	}
 
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 
 	ret = lepton_i2c_open(dev, &ctx);
 	if (ret < 0) {
-		fprintf(stderr, "lepton_i2c_open failed, ret:%d\n", ret);
+		pr_err("lepton_i2c_open failed, ret:%d\n", ret);
 		perror("open:");
 		return -1;
 	}
@@ -61,8 +62,8 @@ int main(int argc, char *argv[])
 	shmq_set_timeout(shmq_fd, tx_qid, 500);
 	rx_pool = shmq_map_queue(shmq_fd, rx_qid, &rx_pool_sz);
 	tx_pool = shmq_map_queue(shmq_fd, tx_qid, &tx_pool_sz);
-	fprintf(stdout, "rx_pool size:%ld\n", rx_pool_sz);
-	fprintf(stdout, "tx_pool size:%ld\n", tx_pool_sz);
+	pr_info("rx_pool size:%ld\n", rx_pool_sz);
+	pr_info("tx_pool size:%ld\n", tx_pool_sz);
 
 	main_run = 1;
 	while(main_run) {
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 		/* request */
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &rx_desc);
 		if (ret < 0) {
-			fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
 			continue;
 		}
 
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (ret != 0) {
-			fprintf(stderr, "i2c R/W failed, ret:%d\n", ret);
+			pr_err("i2c R/W failed, ret:%d\n", ret);
 			ret_code = -1;
 		}
 
@@ -115,7 +116,7 @@ response:
 		/* response ACK */
 		ret = ioctl(shmq_fd, SHMQ_IOC_GET_FREE, &tx_desc);
 		if (ret < 0) {
-			fprintf(stderr, "SHMQ_IOC_GET_FREE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_GET_FREE failed, ret:%d\n", ret);
 			goto response;
 		}
 
@@ -136,7 +137,7 @@ response:
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_ENQUEUE, &tx_desc);
 		if (ret < 0)
-			fprintf(stderr, "SHMQ_IOC_ENQUEUE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_ENQUEUE failed, ret:%d\n", ret);
 
 		free(ack_buf);
 	}

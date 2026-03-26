@@ -17,6 +17,7 @@ target_include_directories(data_router PRIVATE
 	${SHMQ_DIR}
 	${SDK_DIR}
 	${NET_DIR}
+	${LOG_DIR}
 	)
 
 install(TARGETS data_router

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "log.h"
 
 #ifndef _WIN32
 #  include <time.h>

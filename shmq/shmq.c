@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include "shmq.h"
+#include "log.h"
 
 #define SHMQ_DEV "/dev/shmq"
 
@@ -37,7 +38,7 @@ uint32_t shmq_create_queue(int fd, const char *name, uint32_t bufs, uint32_t buf
 
 	strncpy(c.name, name, 31);
 	if (ioctl(fd, SHMQ_IOC_CREATE, &c) < 0) {
-		fprintf(stderr, "CREATE '%s' failed: %s\n", name, strerror(errno));
+		pr_err("CREATE '%s' failed: %s\n", name, strerror(errno));
 		exit(1);
 	}
 

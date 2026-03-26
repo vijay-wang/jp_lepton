@@ -25,6 +25,7 @@
 
 #include "net.h"
 #include "win_net.h"
+#include "log.h"
 
 /* -------------------------------------------------------------------------
  * Internal helpers
@@ -86,12 +87,12 @@ net_err_t WinNetInit(void)
 
     Result = WSAStartup(MAKEWORD(2, 2), &WsaData);
     if (Result != 0) {
-        fprintf(stderr, "[win_net] WSAStartup failed: %d\n", Result);
+        pr_err("[win_net] WSAStartup failed: %d\n", Result);
         return NET_ERR_INIT;
     }
 
     if (LOBYTE(WsaData.wVersion) != 2 || HIBYTE(WsaData.wVersion) != 2) {
-        fprintf(stderr, "[win_net] Winsock 2.2 not available.\n");
+        pr_err("[win_net] Winsock 2.2 not available.\n");
         WSACleanup();
         return NET_ERR_INIT;
     }
@@ -121,7 +122,7 @@ net_socket_t *WinNetSocketCreate(void)
 
     pSock->Handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (pSock->Handle == INVALID_SOCKET) {
-        fprintf(stderr, "[win_net] socket() failed: %d\n", WSAGetLastError());
+        pr_err("[win_net] socket() failed: %d\n", WSAGetLastError());
         free(pSock);
         return NULL;
     }
@@ -168,7 +169,7 @@ net_err_t WinNetServerBind(net_socket_t *pSock, const net_addr_t *pAddr)
     }
 
     if (bind(pSock->Handle, pSa, SaLen) == SOCKET_ERROR) {
-        fprintf(stderr, "[win_net] bind() failed: %d\n", WSAGetLastError());
+        pr_err("[win_net] bind() failed: %d\n", WSAGetLastError());
         return NET_ERR_BIND;
     }
 
@@ -183,7 +184,7 @@ net_err_t WinNetServerListen(net_socket_t *pSock, int Backlog)
     }
 
     if (listen(pSock->Handle, Backlog) == SOCKET_ERROR) {
-        fprintf(stderr, "[win_net] listen() failed: %d\n", WSAGetLastError());
+        pr_err("[win_net] listen() failed: %d\n", WSAGetLastError());
         return NET_ERR_LISTEN;
     }
 
@@ -204,7 +205,7 @@ net_socket_t *WinNetServerAccept(net_socket_t *pSock, net_addr_t *pPeerAddr)
     ClientHandle = accept(pSock->Handle,
                           (struct sockaddr *)&PeerSa, &PeerSaLen);
     if (ClientHandle == INVALID_SOCKET) {
-        fprintf(stderr, "[win_net] accept() failed: %d\n", WSAGetLastError());
+        pr_err("[win_net] accept() failed: %d\n", WSAGetLastError());
         return NULL;
     }
 
@@ -250,7 +251,7 @@ net_err_t WinNetClientConnect(net_socket_t *pSock, const net_addr_t *pAddr)
 
     if (connect(pSock->Handle, pSa, SaLen) == SOCKET_ERROR) {
         WsaErr = WSAGetLastError();
-        fprintf(stderr, "[win_net] connect() failed: %d\n", WsaErr);
+        pr_err("[win_net] connect() failed: %d\n", WsaErr);
         return WinNetMapWsaError(WsaErr);
     }
 
@@ -280,7 +281,7 @@ net_err_t WinNetSend(net_socket_t *pSock, const void *pBuf, size_t Len,
     SentBytes = send(pSock->Handle, (const char *)pBuf, (int)Len, 0);
     if (SentBytes == SOCKET_ERROR) {
         WsaErr = WSAGetLastError();
-        fprintf(stderr, "[win_net] send() failed: %d\n", WsaErr);
+        pr_err("[win_net] send() failed: %d\n", WsaErr);
         return WinNetMapWsaError(WsaErr);
     }
 
@@ -312,7 +313,7 @@ net_err_t WinNetRecv(net_socket_t *pSock, void *pBuf, size_t BufLen,
 
     if (RecvBytes == SOCKET_ERROR) {
         WsaErr = WSAGetLastError();
-        fprintf(stderr, "[win_net] recv() failed: %d\n", WsaErr);
+        pr_err("[win_net] recv() failed: %d\n", WsaErr);
         return WinNetMapWsaError(WsaErr);
     }
 

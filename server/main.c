@@ -6,13 +6,14 @@
 #include <stdio.h>
 #include <signal.h>
 #include "server.h"
+#include "log.h"
 
 static server_handle_t *g_srv;
 
 static void on_signal(int sig)
 {
 	(void)sig;
-	printf("\n[server] Shutting down...\n");
+	pr_info("\n[server] Shutting down...\n");
 	server_stop(g_srv);
 }
 
@@ -27,7 +28,7 @@ int main(void)
 
 	g_srv = server_create(&cfg);
 	if (!g_srv) {
-		fprintf(stderr, "[server] create failed\n");
+		pr_err("[server] create failed\n");
 		return 1;
 	}
 

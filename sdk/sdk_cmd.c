@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include "log.h"
 
 #ifdef _WIN32
 #  ifndef WIN32_LEAN_AND_MEAN

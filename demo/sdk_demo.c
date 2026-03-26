@@ -4,6 +4,7 @@
 #include "LEPTON_SDK.h"
 #include "LEPTON_Types.h"
 #include "LEPTON_SYS.h"
+#include "log.h"
 
 #define SERVER_IP_DEFAULT   "192.168.21.2"
 #define SERVER_PORT_DEFAULT 8080
@@ -27,14 +28,14 @@ int main(int argc, char *argv[])
 
 	h = sdk_create(NULL);
 	if (h == NULL) {
-		fprintf(stderr, "sdk_create failed\n");
+		pr_err("sdk_create failed\n");
 		return -1;
 	}
 
 	err = sdk_connect(h, g_ip, g_port);
 	if (err != SDK_OK) {
 		sdk_destroy(h);
-		fprintf(stderr, "%s\n", sdk_strerror(err));
+		pr_err("%s\n", sdk_strerror(err));
 		goto connect_failed;
 	}
 
@@ -42,28 +43,28 @@ int main(int argc, char *argv[])
 	portDesc.portType = LEP_CCI_TWI;
 	result = LEP_SelectDevice(&portDesc, MAC_COM);
 	if (result != LEP_OK) {
-		fprintf(stderr, "LEP_SelectDevice failed");
+		pr_err("LEP_SelectDevice failed");
 		goto select_dev_failed;
 	}
 
 	result = LEP_OpenPort(0, LEP_CCI_TWI, 0, &portDesc);
 	if (result != LEP_OK) {
-		fprintf(stderr, "LEP_OpenPort failed");
+		pr_err("LEP_OpenPort failed");
 		goto open_port_failed;
 	}
 
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_CLOSED);
 	if (result != LEP_OK)
-		fprintf(stderr, "LEP_SetSysShutterPosition failed");
+		pr_err("LEP_SetSysShutterPosition failed");
 
 	sleep(1);
 
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_OPEN);
 	if (result != LEP_OK)
-		fprintf(stderr, "LEP_SetSysShutterPosition failed");
+		pr_err("LEP_SetSysShutterPosition failed");
 
 	LEP_GetSDKVersion(&portDesc, &version);
-	printf("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
+	pr_info("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
 
 
 	LEP_ClosePort(&portDesc);

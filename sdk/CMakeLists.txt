@@ -13,6 +13,7 @@ target_include_directories(sdk_static PRIVATE
 	${SHMQ_DIR}
 	${SDK_DIR}
 	${NET_DIR}
+	${LOG_DIR}
 	)
 
 set_target_properties(sdk_static PROPERTIES
@@ -27,6 +28,7 @@ target_include_directories(sdk_shared PRIVATE
 	${SHMQ_DIR}
 	${SDK_DIR}
 	${NET_DIR}
+	${LOG_DIR}
 	)
 set_target_properties(sdk_shared PROPERTIES
 	OUTPUT_NAME "sdk"

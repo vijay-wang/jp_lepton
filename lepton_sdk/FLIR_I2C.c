@@ -55,12 +55,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 
 /* Aardvark Includes */
 #include "aardvark.h"
 
-#include "../sdk/sdk.h"
-#include "../sdk/sdk_cmd.h"
+#include "sdk.h"
+#include "sdk_cmd.h"
 
 /* FTDI Includes */
 #include "ftd2xx.h"
@@ -222,7 +223,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 	TIMEVAL socketTimeout;
 #endif
 
-	fprintf(stderr, "You are here.  masterDevice is: %d\n", (int)masterDevice);
+	pr_err("You are here.  masterDevice is: %d\n", (int)masterDevice);
 	/* Place Device-Specific Interface here
 	*/
 	switch(masterDevice)
@@ -263,7 +264,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			// Initialize Winsock
 			res = WSAStartup(MAKEWORD(2,2), &wsaData);
 			if (res != 0) {
-				printf("WSAStartup failed with error: %d\n", res);
+				pr_err("WSAStartup failed with error: %d\n", res);
 				result = LEP_ERROR;
 				return(result);
 			}
@@ -276,7 +277,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			// Resolve the server address and port
 			res = getaddrinfo(DEFAULT_ADDR, DEFAULT_PORT, &hints, &addrresult);
 			if ( res != 0 ) {
-				printf("getaddrinfo failed with error: %d\n", res);
+				pr_err("getaddrinfo failed with error: %d\n", res);
 				WSACleanup();
 				result = LEP_ERROR;
 				return(result);
@@ -284,7 +285,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 
 			ConnectSocket = socket(addrresult->ai_family, addrresult->ai_socktype, addrresult->ai_protocol);
 			if (ConnectSocket == INVALID_SOCKET) {
-				printf("socket failed with error: %ld\n", WSAGetLastError());
+				pr_err("socket failed with error: %ld\n", WSAGetLastError());
 				WSACleanup();
 				result = LEP_ERROR;
 				return(result);

@@ -7,6 +7,7 @@
 
 #include "sdk_file.h"
 #include "sdk_frame.h"   /* sdk_crc16 */
+#include "log.h"
 
 /* -------------------------------------------------------------------------
  * Portable put / get helpers

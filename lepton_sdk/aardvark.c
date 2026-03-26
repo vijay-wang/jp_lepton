@@ -238,8 +238,8 @@ static void *_loadFunction (const char *name, int *result) {
 		handle = dlopen(SO_NAME, RTLD_LAZY);
 		if (handle == 0) {
 #if API_DEBUG
-			fprintf(stderr, "Unable to load %s\n", SO_NAME);
-			fprintf(stderr, "%s\n", dlerror());
+			pr_err("Unable to load %s\n", SO_NAME);
+			pr_err("%s\n", dlerror());
 #endif
 			*result = API_UNABLE_TO_LOAD_LIBRARY;
 			return 0;
@@ -248,9 +248,9 @@ static void *_loadFunction (const char *name, int *result) {
 		version = (void *)dlsym(handle, "c_version");
 		if (version == 0) {
 #if API_DEBUG
-			fprintf(stderr, "Unable to bind c_version() in %s\n",
+			pr_err("Unable to bind c_version() in %s\n",
 					SO_NAME);
-			fprintf(stderr, "%s\n", dlerror());
+			pr_err("%s\n", dlerror());
 #endif
 			handle  = 0;
 			*result = API_INCOMPATIBLE_LIBRARY;
@@ -263,29 +263,29 @@ static void *_loadFunction (const char *name, int *result) {
 				API_HEADER_VERSION < api_version_req)
 		{
 #if API_DEBUG
-			fprintf(stderr, "\nIncompatible versions:\n");
+			pr_err("\nIncompatible versions:\n");
 
-			fprintf(stderr, "  Header version  = v%d.%02d  ",
+			pr_err("  Header version  = v%d.%02d  ",
 					(API_HEADER_VERSION >> 8) & 0xff, API_HEADER_VERSION & 0xff);
 
 			if (sw_version < API_REQ_SW_VERSION)
-				fprintf(stderr, "(requires library >= %d.%02d)\n",
+				pr_err("(requires library >= %d.%02d)\n",
 						(API_REQ_SW_VERSION >> 8) & 0xff,
 						API_REQ_SW_VERSION & 0xff);
 			else
-				fprintf(stderr, "(library version OK)\n");
+				pr_err("(library version OK)\n");
 
 
-			fprintf(stderr, "  Library version = v%d.%02d  ",
+			pr_err("  Library version = v%d.%02d  ",
 					(sw_version >> 8) & 0xff,
 					(sw_version >> 0) & 0xff);
 
 			if (API_HEADER_VERSION < api_version_req)
-				fprintf(stderr, "(requires header >= %d.%02d)\n",
+				pr_err("(requires header >= %d.%02d)\n",
 						(api_version_req >> 8) & 0xff,
 						(api_version_req >> 0) & 0xff);
 			else
-				fprintf(stderr, "(header version OK)\n");
+				pr_err("(header version OK)\n");
 #endif
 			handle  = 0;
 			*result = API_INCOMPATIBLE_LIBRARY;

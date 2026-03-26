@@ -26,6 +26,7 @@
 #include <linux/videodev2.h>
 #include "lepton_vospi_funcs.h"
 #include "shmq.h"
+#include "log.h"
 
 #define SHMQ_DEV "/dev/shmq"
 
@@ -71,7 +72,7 @@ static void sig_proc(int signo)
 
 static void errno_exit(const char *s)
 {
-        fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
+        pr_err("%s error %d, %s\n", s, errno, strerror(errno));
         exit(EXIT_FAILURE);
 }
 
@@ -118,12 +119,12 @@ static void process_image(const void *p, int size)
 			fclose(out_file);
 			/* image stored */
 			fflush(stdout);
-			fprintf(stderr, "save %s\n", out_path);
+			pr_err("save %s\n", out_path);
 		}
 		else {
 			/* failed to store image frame */
 			fflush(stderr);
-			fprintf(stderr, "failed save %s\n", out_path);
+			pr_err("failed save %s\n", out_path);
 		}
 		frame_number++;
 	} else {
@@ -192,7 +193,7 @@ static int read_frame(void)
                         * and move on to the next.
                         */
                         fflush(stderr);
-                        fprintf(stderr, "!");
+                        pr_err("!");
                         fflush(stdout);
                         return 0;
                 }
@@ -266,7 +267,7 @@ static void mainloop(void)
 		}
 
 		if (0 == r)
-			fprintf(stderr, "select timeout\n");
+			pr_err("select timeout\n");
 
 		read_frame();
 	}
@@ -367,7 +368,7 @@ static void init_read(unsigned int buffer_size)
         buffers = calloc(1, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\n");
+                pr_err("Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -375,7 +376,7 @@ static void init_read(unsigned int buffer_size)
         buffers[0].start = malloc(buffer_size);
 
         if (!buffers[0].start) {
-                fprintf(stderr, "Out of memory\n");
+                pr_err("Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 }
@@ -392,7 +393,7 @@ static void init_mmap(void)
 
         if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
                 if (EINVAL == errno) {
-                        fprintf(stderr, "%s does not support "
+                        pr_err("%s does not support "
                                  "memory mapping\n", dev_name);
                         exit(EXIT_FAILURE);
                 } else {
@@ -401,7 +402,7 @@ static void init_mmap(void)
         }
 
         if (req.count < 2) {
-                fprintf(stderr, "Insufficient buffer memory on %s\n",
+                pr_err("Insufficient buffer memory on %s\n",
                          dev_name);
                 exit(EXIT_FAILURE);
         }
@@ -409,7 +410,7 @@ static void init_mmap(void)
         buffers = calloc(req.count, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\n");
+                pr_err("Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -450,7 +451,7 @@ static void init_userp(unsigned int buffer_size)
 
         if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
                 if (EINVAL == errno) {
-                        fprintf(stderr, "%s does not support "
+                        pr_err("%s does not support "
                                  "user pointer i/o\n", dev_name);
                         exit(EXIT_FAILURE);
                 } else {
@@ -461,7 +462,7 @@ static void init_userp(unsigned int buffer_size)
         buffers = calloc(4, sizeof(*buffers));
 
         if (!buffers) {
-                fprintf(stderr, "Out of memory\n");
+                pr_err("Out of memory\n");
                 exit(EXIT_FAILURE);
         }
 
@@ -470,7 +471,7 @@ static void init_userp(unsigned int buffer_size)
                 buffers[n_buffers].start = malloc(buffer_size);
 
                 if (!buffers[n_buffers].start) {
-                        fprintf(stderr, "Out of memory\n");
+                        pr_err("Out of memory\n");
                         exit(EXIT_FAILURE);
                 }
         }
@@ -486,7 +487,7 @@ static void init_device(void)
 
         if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
                 if (EINVAL == errno) {
-                        fprintf(stderr, "%s is no V4L2 device\n",
+                        pr_err("%s is no V4L2 device\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 } else {
@@ -495,7 +496,7 @@ static void init_device(void)
         }
 
         if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-                fprintf(stderr, "%s is no video capture device\n",
+                pr_err("%s is no video capture device\n",
                          dev_name);
                 exit(EXIT_FAILURE);
         }
@@ -503,7 +504,7 @@ static void init_device(void)
         switch (io) {
         case IO_METHOD_READ:
                 if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-                        fprintf(stderr, "%s does not support read i/o\n",
+                        pr_err("%s does not support read i/o\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 }
@@ -512,7 +513,7 @@ static void init_device(void)
         case IO_METHOD_MMAP:
         case IO_METHOD_USERPTR:
                 if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-                        fprintf(stderr, "%s does not support streaming i/o\n",
+                        pr_err("%s does not support streaming i/o\n",
                                  dev_name);
                         exit(EXIT_FAILURE);
                 }
@@ -601,20 +602,20 @@ static void open_device(void)
         struct stat st;
 
         if (-1 == stat(dev_name, &st)) {
-                fprintf(stderr, "Cannot identify '%s': %d, %s\n",
+                pr_err("Cannot identify '%s': %d, %s\n",
                          dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
 
         if (!S_ISCHR(st.st_mode)) {
-                fprintf(stderr, "%s is no device\n", dev_name);
+                pr_err("%s is no device\n", dev_name);
                 exit(EXIT_FAILURE);
         }
 
         fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
 
         if (-1 == fd) {
-                fprintf(stderr, "Cannot open '%s': %d, %s\n",
+                pr_err("Cannot open '%s': %d, %s\n",
                          dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
@@ -723,7 +724,7 @@ int main(int argc, char **argv)
                         /* make sure the prefix itself is writable */
                         test_f = fopen(out_file_prefix, "wb");
                         if (!test_f) {
-                                printf("Cannot open file name prefix '%s' for writing.\n", optarg);
+                                pr_err("Cannot open file name prefix '%s' for writing.\n", optarg);
                                 exit(1);
                         }
                         fclose(test_f);
@@ -753,7 +754,7 @@ int main(int argc, char **argv)
                                 telemetry_loc = TELEMETRY_OFF;
                         }
                         else {
-                                printf("Unknown telemetry location '%s'\n", optarg);
+                                pr_err("Unknown telemetry location '%s'\n", optarg);
                                 exit(1);
                         }
                         break;
@@ -769,17 +770,17 @@ int main(int argc, char **argv)
         }
 
         if (lepton_version_arg_found > 1) {
-                printf("Warning: Multiple lepton version command-line args found. The last setting will be used.\n");
+                pr_warn("Warning: Multiple lepton version command-line args found. The last setting will be used.\n");
         }
-        printf("Collecting frames from Lepton %d.X, ", (int)lep_version);
+        pr_info("Collecting frames from Lepton %d.X, ", (int)lep_version);
         if (telemetry_loc == TELEMETRY_OFF) {
-                printf("telemetry off\n");
+                pr_info("telemetry off\n");
         }
         else if (telemetry_loc == TELEMETRY_AT_END) {
-                printf("telemetry at end of subframe data\n");
+                pr_info("telemetry at end of subframe data\n");
         }
         else if (telemetry_loc == TELEMETRY_AT_START) {
-                printf("telemetry at start of subframe data\n");
+                pr_info("telemetry at start of subframe data\n");
         }
         init_lepton_info(&lep_info, lep_version, telemetry_loc);
         pixel_data = (unsigned short *)calloc(lep_info.image_params.pixel_width*lep_info.image_params.pixel_height,
@@ -792,7 +793,7 @@ int main(int argc, char **argv)
 	qid = shmq_create_queue(fd_q, "lpt_img_shmq", 8, sz_shmq);
 	shmq_set_timeout(fd_q, qid, 500);
 	pool = shmq_map_queue(fd_q, qid, &pool_sz);
-	fprintf(stdout, "pool size:%ld\n", pool_sz);
+	pr_info("pool size:%ld\n", pool_sz);
         open_device();
         init_device();
         start_capturing();
@@ -804,7 +805,7 @@ int main(int argc, char **argv)
 	shmq_munmap_queue(pool, pool_sz);
 	shmq_destroy_queue(fd_q, qid);
 	shmq_close_dev(fd_q);
-        fprintf(stdout, "exit lepton_data_collector\n");
+        pr_info("exit lepton_data_collector\n");
 
         return 0;
 }

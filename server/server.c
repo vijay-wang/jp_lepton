@@ -11,9 +11,10 @@
 #include <signal.h>
 #include <stdatomic.h>
 
-#include "../net/net.h"
+#include "net.h"
 #include "server.h"
 #include "server_session.h"
+#include "log.h"
 
 /* -----------------------------------------------------------------------
  * Handle structure
@@ -83,7 +84,7 @@ int server_run(server_handle_t *srv)
 
 	srv->listen_sock = net_socket_create();
 	if (!srv->listen_sock) {
-		fprintf(stderr, "[server] socket create failed\n");
+		pr_err("[server] socket create failed\n");
 		return -1;
 	}
 
@@ -93,19 +94,19 @@ int server_run(server_handle_t *srv)
 
 	err = net_server_bind(srv->listen_sock, &addr);
 	if (err != NET_OK) {
-		fprintf(stderr, "[server] bind failed: %s\n",
+		pr_err("[server] bind failed: %s\n",
 			net_strerror(err));
 		return -1;
 	}
 
 	err = net_server_listen(srv->listen_sock, srv->cfg.backlog);
 	if (err != NET_OK) {
-		fprintf(stderr, "[server] listen failed: %s\n",
+		pr_err("[server] listen failed: %s\n",
 			net_strerror(err));
 		return -1;
 	}
 
-	printf("[server] Listening on %s:%u\n",
+	pr_info("[server] Listening on %s:%u\n",
 	       srv->cfg.bind_ip, (unsigned)srv->cfg.port);
 
 	while (!atomic_load(&srv->stop)) {
@@ -116,16 +117,16 @@ int server_run(server_handle_t *srv)
 		client = net_server_accept(srv->listen_sock, &peer);
 		if (!client) {
 			if (!atomic_load(&srv->stop))
-				fprintf(stderr, "[server] accept failed\n");
+				pr_err("[server] accept failed\n");
 			break;
 		}
 
-		printf("[server] Client connected: %s:%u\n",
+		pr_info("[server] Client connected: %s:%u\n",
 		       peer.ip_str, (unsigned)peer.port);
 
 		sess = server_session_create(client);
 		if (!sess) {
-			fprintf(stderr, "[server] session create failed\n");
+			pr_err("[server] session create failed\n");
 			net_socket_destroy(client);
 			continue;
 		}
@@ -134,7 +135,7 @@ int server_run(server_handle_t *srv)
 		server_session_wait(sess);
 		server_session_destroy(sess);
 
-		printf("[server] Client %s:%u disconnected\n",
+		pr_info("[server] Client %s:%u disconnected\n",
 		       peer.ip_str, (unsigned)peer.port);
 	}
 

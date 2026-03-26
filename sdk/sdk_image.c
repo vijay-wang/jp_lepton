@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "log.h"
 
 #ifdef _WIN32
 #  ifndef WIN32_LEAN_AND_MEAN
@@ -259,7 +260,7 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
         if (evict_idx < 0) {
             /* Every slot is user-held, drop this frame */
             mod_unlock(mod);
-            fprintf(stderr, "[image] all slots held, dropping frame\n");
+            pr_err("[image] all slots held, dropping frame\n");
             return 0;
         }
         mod->count--;  /* we're about to reuse one */

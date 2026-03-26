@@ -11,14 +11,16 @@ file(GLOB_RECURSE HEADERS
 
 add_definitions(-DI2C_DEVICE_FILE="/dev/i2c-2")
 
+# build static library
 add_library(lepton_sdk_static STATIC ${SOURCES})
-target_include_directories(lepton_sdk_static PUBLIC ./)
+target_include_directories(lepton_sdk_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${LOG_DIR} ${SDK_DIR})
 set_target_properties(lepton_sdk_static PROPERTIES
 	OUTPUT_NAME "lepton_sdk"
 	)
 
+# build shared library
 add_library(lepton_sdk_shared  SHARED ${SOURCES})
-target_include_directories(lepton_sdk_shared PUBLIC ./)
+target_include_directories(lepton_sdk_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${LOG_DIR} ${SDK_DIR})
 set_target_properties(lepton_sdk_shared PROPERTIES
 	OUTPUT_NAME "lepton_sdk"
 	)

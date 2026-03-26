@@ -25,6 +25,7 @@
 
 #include "net.h"
 #include "unix_net.h"
+#include "log.h"
 
 /* -----------------------------------------------------------------------
  * Internal helpers
@@ -108,7 +109,7 @@ unix_net_socket_create(void)
 	sock->connected = 0;
 
 	if (sock->fd < 0) {
-		fprintf(stderr, "[unix_net] socket() failed: %s\n",
+		pr_err("[unix_net] socket() failed: %s\n",
 			strerror(errno));
 		free(sock);
 		return NULL;
@@ -155,7 +156,7 @@ unix_net_server_bind(net_socket_t *sock, const net_addr_t *addr)
 		return NET_ERR_PARAM;
 
 	if (bind(sock->fd, (struct sockaddr *)&ss, ss_len) < 0) {
-		fprintf(stderr, "[unix_net] bind() failed: %s\n",
+		pr_err("[unix_net] bind() failed: %s\n",
 			strerror(errno));
 		return NET_ERR_BIND;
 	}
@@ -171,7 +172,7 @@ unix_net_server_listen(net_socket_t *sock, int backlog)
 		return NET_ERR_PARAM;
 
 	if (listen(sock->fd, backlog) < 0) {
-		fprintf(stderr, "[unix_net] listen() failed: %s\n",
+		pr_err("[unix_net] listen() failed: %s\n",
 			strerror(errno));
 		return NET_ERR_LISTEN;
 	}
@@ -192,7 +193,7 @@ unix_net_server_accept(net_socket_t *sock, net_addr_t *peer_addr)
 
 	client_fd = accept(sock->fd, (struct sockaddr *)&peer_ss, &peer_len);
 	if (client_fd < 0) {
-		fprintf(stderr, "[unix_net] accept() failed: %s\n",
+		pr_err("[unix_net] accept() failed: %s\n",
 			strerror(errno));
 		return NULL;
 	}
@@ -249,7 +250,7 @@ unix_net_client_connect(net_socket_t *sock, const net_addr_t *addr)
 		return NET_ERR_PARAM;
 
 	if (connect(sock->fd, (struct sockaddr *)&ss, ss_len) < 0) {
-		fprintf(stderr, "[unix_net] connect() failed: %s\n",
+		pr_err("[unix_net] connect() failed: %s\n",
 			strerror(errno));
 		return errno_to_net_err(errno);
 	}
@@ -276,7 +277,7 @@ unix_net_send(net_socket_t *sock, const void *buf, size_t len, size_t *sent)
 
 	n = send(sock->fd, buf, len, 0);
 	if (n < 0) {
-		fprintf(stderr, "[unix_net] send() failed: %s\n",
+		pr_err("[unix_net] send() failed: %s\n",
 			strerror(errno));
 		return errno_to_net_err(errno);
 	}
@@ -303,7 +304,7 @@ unix_net_recv(net_socket_t *sock, void *buf, size_t buf_len, size_t *received)
 		return NET_ERR_CLOSED;
 
 	if (n < 0) {
-		fprintf(stderr, "[unix_net] recv() failed: %s\n",
+		pr_err("[unix_net] recv() failed: %s\n",
 			strerror(errno));
 		return errno_to_net_err(errno);
 	}

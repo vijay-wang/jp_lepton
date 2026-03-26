@@ -17,6 +17,7 @@
 #include "LEPTON_I2C_Reg.h"
 
 #include "lep_i2cdev.h"
+#include "log.h"
 
 #define DEBUG 5
 
@@ -25,7 +26,7 @@ int debug_level = DEBUG;
 
 #define DEBUG_PRINT(level, args...) { \
 	if (level <= debug_level) { \
-		fprintf(stderr, args); } }
+		pr_err(args); } }
 
 #define DEBUG_DUMP(level, dptr, dformatwidth, dcount, per_line) { \
 	if (level <= debug_level) { \
@@ -34,10 +35,10 @@ int debug_level = DEBUG;
 			for (__debug_dump_j=0; __debug_dump_j<per_line; __debug_dump_j++) { \
 				if ((__debug_dump_i + __debug_dump_j) >= dcount) \
 				break; \
-				fprintf(stderr, "%0*x ", dformatwidth, dptr[__debug_dump_i+__debug_dump_j]); } \
-			fprintf(stderr, "\n"); \
+				pr_err("%0*x ", dformatwidth, dptr[__debug_dump_i+__debug_dump_j]); } \
+			pr_err("\n"); \
 			__debug_dump_i+=per_line; } \
-		fprintf(stderr, "\n"); } }
+		pr_err("\n"); } }
 
 #else
 #define DEBUG_PRINT(level, args...) {}

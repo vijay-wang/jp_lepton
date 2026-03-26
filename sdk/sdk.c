@@ -24,6 +24,7 @@
 #include "sdk_image.h"
 #include "sdk_cmd.h"
 #include "sdk_file.h"
+#include "log.h"
 
 /* -------------------------------------------------------------------------
  * Receive buffer
@@ -299,7 +300,7 @@ static void rx_dispatch(sdk_handle_t *h, const sdk_frame_t *frame)
     }
 
     default:
-        fprintf(stderr, "[sdk] Unknown frame type %d, dropping\n", frame->type);
+        pr_err("[sdk] Unknown frame type %d, dropping\n", frame->type);
         break;
     }
 }
@@ -317,7 +318,7 @@ static void *sdk_rx_thread(void *arg)
     uint8_t       tmp[RECV_CHUNK];
 
     if (rxbuf_init(&rbuf) != 0) {
-        fprintf(stderr, "[sdk] rx thread: failed to alloc recv buffer\n");
+        pr_err("[sdk] rx thread: failed to alloc recv buffer\n");
         h->rx_running = 0;
 #ifdef _WIN32
         return 1;
@@ -333,12 +334,12 @@ static void *sdk_rx_thread(void *arg)
         /* Read a chunk into the temp buffer, then append to rbuf */
         err = net_recv(h->sock, tmp, sizeof(tmp), &received);
         if (err == NET_ERR_CLOSED || err != NET_OK) {
-            fprintf(stderr, "[sdk] rx: connection closed or error: %d\n", err);
+            pr_err("[sdk] rx: connection closed or error: %d\n", err);
             break;
         }
 
         if (rxbuf_append(&rbuf, tmp, received) != 0) {
-            fprintf(stderr, "[sdk] rx: buffer overflow\n");
+            pr_err("[sdk] rx: buffer overflow\n");
             break;
         }
 
@@ -372,7 +373,7 @@ static void *sdk_rx_thread(void *arg)
             if (sdk_frame_decode(ptr, total, &frame) == 0)
                 rx_dispatch(h, &frame);
             else
-                fprintf(stderr, "[sdk] rx: frame decode failed (CRC?)\n");
+                pr_err("[sdk] rx: frame decode failed (CRC?)\n");
 
             rxbuf_consume(&rbuf, total);
         }
@@ -682,7 +683,7 @@ sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
         }
 
         if (retry == SDK_FILE_MAX_RETRY) {
-            fprintf(stderr, "[sdk] send_file: max retries reached at seq %u\n", seq);
+            pr_err("[sdk] send_file: max retries reached at seq %u\n", seq);
             result = SDK_ERR_TIMEOUT;
             goto done;
         }
@@ -766,7 +767,7 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
         sdk_pending_arm(&h->pending);
 
         if (sdk_pending_wait(&h->pending, tms, &rsp, &rsp_len) != 0) {
-            fprintf(stderr, "[sdk] recv_file: timeout waiting for seq %u\n", seq);
+            pr_err("[sdk] recv_file: timeout waiting for seq %u\n", seq);
             result = SDK_ERR_TIMEOUT;
             goto done;
         }
@@ -802,7 +803,7 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
     {
         uint16_t got_crc = sdk_crc16(file_buf, (size_t)file_total);
         if (got_crc != expected_crc) {
-            fprintf(stderr, "[sdk] recv_file: CRC mismatch\n");
+            pr_err("[sdk] recv_file: CRC mismatch\n");
             result = SDK_ERR_PROTO;
             goto done;
         }
