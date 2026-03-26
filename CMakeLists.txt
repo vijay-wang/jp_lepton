@@ -12,6 +12,7 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Install path"
 set(CMAKE_INSTALL_BINDIR "bin")
 set(CMAKE_INSTALL_LIBDIR "lib")
 set(CMAKE_INSTALL_INCLUDEDIR "include")
+set(CMAKE_INSTALL_INITDIR "etc/init.d")
 
 file(GLOB SHMQ_SOURCES "${SHMQ_DIR}/*.c")
 add_library(shmq_objects OBJECT ${SHMQ_SOURCES})
@@ -29,10 +30,6 @@ add_library(sdk_objects OBJECT ${SDK_SOURCES})
 target_include_directories(sdk_objects PRIVATE ${SDK_DIR})
 
 if(UNIX)
-	if(BUILD_DEMO OR BUILD_ALL)
-		add_subdirectory(./demo)
-	endif()
-
 	if(BUILD_LEPTON_DATA_COLLECTOR OR BUILD_ALL)
 		add_subdirectory(./lepton_data_collector)
 	endif()
@@ -52,4 +49,8 @@ endif()
 
 if(BUILD_LEPTON_SDK OR BUILD_ALL)
 	add_subdirectory(./lepton_sdk)
+endif()
+
+if(BUILD_DEMO OR BUILD_ALL)
+	add_subdirectory(./demo)
 endif()

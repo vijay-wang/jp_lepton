@@ -8,17 +8,21 @@ add_executable(data_router ${CURRENT_SOURCES}
 	$<TARGET_OBJECTS:shmq_objects>
 	$<TARGET_OBJECTS:sdk_objects>
 	$<TARGET_OBJECTS:net_objects>
-)
+	)
 
 target_link_libraries(data_router PRIVATE pthread)
 
 target_include_directories(data_router PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${SHMQ_DIR}
-    ${SDK_DIR}
-    ${NET_DIR}
-)
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${SHMQ_DIR}
+	${SDK_DIR}
+	${NET_DIR}
+	)
 
 install(TARGETS data_router
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)
+
+install(FILES S19data_router
+	DESTINATION ${CMAKE_INSTALL_INITDIR}
+	)

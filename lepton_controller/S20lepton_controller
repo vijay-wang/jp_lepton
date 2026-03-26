@@ -1,0 +1,1 @@
+/bin/lepton_controller /dev/i2c-2 &

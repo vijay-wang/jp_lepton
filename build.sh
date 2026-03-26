@@ -1,7 +1,12 @@
 rm build -r
+rm build_sdk -r
 
 if [ ! -d "build" ]; then
 	mkdir build
+fi
+
+if [ ! -d "build_sdk" ]; then
+	mkdir build_sdk
 fi
 
 cd build
@@ -16,6 +21,8 @@ cmake	-DBUILD_LEPTON_DATA_COLLECTOR=ON \
 make
 make install
 
+cd -
+cd build_sdk
 cmake	-DBUILD_SDK=ON \
 	-DBUILD_LEPTON_SDK=ON \
 	-DBUILD_DEMO=ON \

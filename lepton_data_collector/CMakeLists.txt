@@ -6,10 +6,14 @@ project(lepton_data_collector)
 file(GLOB CURRENT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 add_executable(lepton_data_collector ${CURRENT_SOURCES} $<TARGET_OBJECTS:shmq_objects>)
 target_include_directories(lepton_data_collector PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${SHMQ_DIR}
-)
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${SHMQ_DIR}
+	)
 
 install(TARGETS lepton_data_collector
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)
+
+install(FILES S21lepton_data_collector
+	DESTINATION ${CMAKE_INSTALL_INITDIR}
+	)

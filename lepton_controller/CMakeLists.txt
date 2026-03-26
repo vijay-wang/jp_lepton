@@ -6,10 +6,14 @@ project(lepton_controller)
 file(GLOB CURRENT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
 add_executable(lepton_controller ${CURRENT_SOURCES} $<TARGET_OBJECTS:shmq_objects>)
 target_include_directories(lepton_controller PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${SHMQ_DIR}
-)
+	${CMAKE_CURRENT_SOURCE_DIR}
+	${SHMQ_DIR}
+	)
 
 install(TARGETS lepton_controller
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	)
+
+install(FILES S20lepton_controller
+	DESTINATION ${CMAKE_INSTALL_INITDIR}
+	)
