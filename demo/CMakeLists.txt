@@ -5,12 +5,6 @@ set(CMAKE_C_STANDARD 99)
 add_compile_options(-D_POSIX_C_SOURCE=200809L)
 
 # ------------------------------------------------------------------
-# Paths (demo lives at project/demo/, sources are in ../sdk ../net)
-# ------------------------------------------------------------------
-set(SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../sdk)
-set(NET_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../net)
-
-# ------------------------------------------------------------------
 # Platform
 # ------------------------------------------------------------------
 if(WIN32)
@@ -38,3 +32,9 @@ add_executable(demo
 
 target_include_directories(demo PRIVATE ${SDK_DIR} ${NET_DIR})
 target_link_libraries(demo ${PLATFORM_LIBS})
+
+add_executable(sdk_demo
+    sdk_demo.c
+)
+target_link_libraries(sdk_demo PRIVATE sdk_shared lepton_sdk_shared pthread m dl)
+target_include_directories(sdk_demo PRIVATE ${SDK_DIR} ${LEPTON_SDK_DIR})
