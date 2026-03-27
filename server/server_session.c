@@ -266,6 +266,7 @@ static void *img_thread_fn(void *arg)
 	void *pool;
 	struct shmq_buf_desc desc;
 	struct shmq_lookup lk;
+	struct shmq_queue_id qid;
 	size_t pool_sz;
 	struct server_session *sess = (struct server_session *)arg;
 	size_t   reserved = (size_t)IMG_W * IMG_BPP * 4;
@@ -292,10 +293,16 @@ static void *img_thread_fn(void *arg)
 	}
 
 	desc.queue_id = lk.queue_id;
+	qid.queue_id = lk.queue_id;
 	pr_info("lookup %s qid = %d\n", lk.name, lk.queue_id);
 
 	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
 	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
+	ret = shmq_flush(shmq_fd, &qid);
+	if (ret != 0) {
+		pr_err("shmq_flush %s failed\n", lk.name);
+		goto flush_failed;
+	}
 
 	frame[0] = (uint8_t)(IMG_W >> 8);
 	frame[1] = (uint8_t)(IMG_W);
@@ -327,6 +334,7 @@ static void *img_thread_fn(void *arg)
 
 	shmq_munmap_queue(pool, pool_sz);
 
+flush_failed:
 lookup_failed:
 	shmq_close_dev(shmq_fd);
 open_dev_failed:

@@ -175,6 +175,8 @@ uint8_t *shmq_map_queue(int fd, uint32_t qid, size_t *out_sz);
 
 int shmq_munmap_queue(void *addr, size_t length);
 
+int shmq_flush(int fd, struct shmq_queue_id *qid);
+
 void shmq_destroy_queue(int fd, uint32_t qid);
 
 #endif /* _SHMQ_H */

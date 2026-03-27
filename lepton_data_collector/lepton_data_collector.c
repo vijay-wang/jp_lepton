@@ -135,7 +135,7 @@ static void process_image(const void *p, int size)
 	if (to_shmq) {
 		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
 		if(ret < 0) {
-			pr_info("SHMQ_IOC_GET_FREE failed, ret:%d\n", ret);
+			pr_info("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
 			return;
 		}
 
@@ -144,7 +144,7 @@ static void process_image(const void *p, int size)
 
 		ret = ioctl(fd_q, SHMQ_IOC_ENQUEUE, &d);
 		if(ret < 0) {
-			pr_info("SHMQ_IOC_ENQUEUE failed, ret:%d\n", ret);
+			pr_info("SHMQ_IOC_ENQUEUE failed, errno:%d\n", errno);
 			return;
 		}
 	}

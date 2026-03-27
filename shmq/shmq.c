@@ -83,6 +83,11 @@ int shmq_munmap_queue(void *addr, size_t length)
 	return munmap(addr, length);
 }
 
+int shmq_flush(int fd, struct shmq_queue_id *qid)
+{
+	return ioctl(fd, SHMQ_IOC_FLUSH, qid);
+}
+
 void shmq_destroy_queue(int fd, uint32_t qid)
 {
 	struct shmq_queue_id qi = { .queue_id = qid };
