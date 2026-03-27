@@ -256,6 +256,8 @@ static int sess_send_frame(struct server_session *sess,
 #define IMG_W   160
 #define IMG_H   120
 #define IMG_BPP 2
+#define RESERVED_OFF 6
+#define RESERVED_LINES 4
 
 static void *img_thread_fn(void *arg)
 {
@@ -311,7 +313,7 @@ static void *img_thread_fn(void *arg)
 			continue;
 		}
 
-		memcpy(frame, pool + desc.offset, desc.data_size);
+		memcpy(frame + RESERVED_OFF + IMG_W * IMG_BPP * RESERVED_LINES, pool + desc.offset, desc.data_size);
 
 		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, frame, total) != 0) {
 			pr_err("sess_send_frame failed\n");
