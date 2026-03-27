@@ -4,6 +4,7 @@
 #include "LEPTON_SDK.h"
 #include "LEPTON_Types.h"
 #include "LEPTON_SYS.h"
+#include "LEPTON_OEM.h"
 #include "log.h"
 
 #define SERVER_IP_DEFAULT   "192.168.21.2"
@@ -17,6 +18,7 @@ int main(int argc, char *argv[])
 	LEP_RESULT result;
 	LEP_CAMERA_PORT_DESC_T portDesc;
 	LEP_SDK_VERSION_T version;
+	LEP_OEM_GPIO_MODE_E gpio_mode;
 
 	sdk_handle_t *h;
 	sdk_err_t     err;
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
 		goto open_port_failed;
 	}
 
+	/* shutter control */
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_CLOSED);
 	if (result != LEP_OK)
 		pr_err("LEP_SetSysShutterPosition failed");
@@ -63,9 +66,38 @@ int main(int argc, char *argv[])
 	if (result != LEP_OK)
 		pr_err("LEP_SetSysShutterPosition failed");
 
+	/* get sdk version */
 	LEP_GetSDKVersion(&portDesc, &version);
 	pr_info("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
 
+	/* enable vsync signal, and then the image streaming will start */
+	gpio_mode = LEP_OEM_END_GPIO_MODE;
+	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
+	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
+
+	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_VSYNC);
+	pr_info("LEP_SetOemGpioMode result = %d.\n", result);
+
+	gpio_mode = LEP_OEM_END_GPIO_MODE;
+	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
+	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
+
+	for (int i = 0; i < 100; ++i) {
+		sdk_image_buf_t *buf = sdk_recv_image(h, 100);
+		if (buf == NULL) {
+			pr_info("timeout or network error\n");
+			continue;
+		}
+
+		pr_info("width:%d, height:%d, timestamp:%ld\n",
+				buf->width, buf->height, buf->timestamp);
+
+		sdk_release_image(h, buf);
+	}
+
+	/* disable vsync signal, and the the image streaming will stop */
+	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
+	pr_info("LEP_SetOemGpioMode result = %d.\n", result);
 
 	LEP_ClosePort(&portDesc);
 select_dev_failed:

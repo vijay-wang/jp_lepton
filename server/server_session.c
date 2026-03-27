@@ -307,7 +307,7 @@ static void *img_thread_fn(void *arg)
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
 		if (ret != 0) {
-			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_DEQUEUE failed, errno:%d\n", errno);
 			continue;
 		}
 
@@ -320,7 +320,7 @@ static void *img_thread_fn(void *arg)
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_RELEASE, &desc);
 		if (ret != 0)
-			pr_err("SHMQ_IOC_RELEASE failed, ret:%d\n", ret);
+			pr_err("SHMQ_IOC_RELEASE failed, errno:%d\n", errno);
 	}
 
 	shmq_munmap_queue(pool, pool_sz);
@@ -403,7 +403,7 @@ get_free:
 		/* cmd request */
 		r = ioctl(shmq_fd, SHMQ_IOC_GET_FREE, &in_desc);
 		if (r < 0) {
-			pr_err("SHMQ_IOC_GET_FREE failed, ret:%d\n", r);
+			pr_err("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
 			goto get_free;
 		}
 
@@ -417,7 +417,7 @@ dequeue:
 		/* cmd ack */
 		r = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &out_desc);
 		if (r != 0) {
-			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", r);
+			pr_err("SHMQ_IOC_DEQUEUE failed, errno:%d\n", errno);
 			goto dequeue;
 		}
 

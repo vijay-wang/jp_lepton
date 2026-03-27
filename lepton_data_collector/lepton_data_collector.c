@@ -93,6 +93,7 @@ static void process_image(const void *p, int size)
 	char out_path[256];
 	int done = 0;
 	int lc_errs = 0;
+	int ret;
 	struct shmq_buf_desc d = { .queue_id = qid };
 
 	if (is_subframe_index_valid(&lep_info, (unsigned short *)p) == 0)
@@ -132,14 +133,20 @@ static void process_image(const void *p, int size)
 	}
 
 	if (to_shmq) {
-		if (ioctl(fd_q, SHMQ_IOC_GET_FREE, &d) < 0)
+		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
+		if(ret < 0) {
+			pr_info("SHMQ_IOC_GET_FREE failed, ret:%d\n", ret);
 			return;
+		}
 
 		memcpy(pool + d.offset, pixel_data, sz_shmq);
 		d.data_size = sz_shmq;
 
-		if (ioctl(fd_q, SHMQ_IOC_ENQUEUE, &d) < 0)
+		ret = ioctl(fd_q, SHMQ_IOC_ENQUEUE, &d);
+		if(ret < 0) {
+			pr_info("SHMQ_IOC_ENQUEUE failed, ret:%d\n", ret);
 			return;
+		}
 	}
 }
 
@@ -772,7 +779,7 @@ int main(int argc, char **argv)
         if (lepton_version_arg_found > 1) {
                 pr_warn("Warning: Multiple lepton version command-line args found. The last setting will be used.\n");
         }
-        pr_info("Collecting frames from Lepton %d.X, ", (int)lep_version);
+        pr_info("Collecting frames from Lepton %d.X \n", (int)lep_version);
         if (telemetry_loc == TELEMETRY_OFF) {
                 pr_info("telemetry off\n");
         }
