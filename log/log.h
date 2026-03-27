@@ -33,6 +33,7 @@
 #define _LOG_H
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 /*
@@ -146,6 +147,30 @@ static inline int log_get_level(void)
 #endif
 
 /*
+ * __log_filename - strip directory prefix from __FILE__ at compile time
+ *
+ * __FILE__ may expand to a full build-system path such as
+ * "/home/user/project/src/foo.c".  This helper walks the string once at
+ * compile time (constant folding) and returns a pointer to the basename.
+ *
+ * The ternary trick is equivalent to strrchr(__FILE__, '/') + 1 but
+ * operates on a string literal so the compiler can evaluate it entirely
+ * at compile time with -O1 or higher, producing no runtime cost.
+ *
+ * On Windows both '/' and '\' are tried so that MSVC and MinGW paths
+ * are handled correctly.
+ */
+#if defined(_WIN32) || defined(_WIN64)
+#  define __log_filename						\
+	(strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 :	\
+	 strrchr(__FILE__, '/')  ? strrchr(__FILE__, '/')  + 1 :	\
+	 __FILE__)
+#else
+#  define __log_filename						\
+	(strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+
+/*
  * __log_level_str - human-readable tag for each log level
  * @lvl: numeric log level
  */
@@ -217,7 +242,7 @@ static inline const char *__log_timestamp(void)
 					"[%s] [%s] %s:%d %s() " fmt,	\
 					__log_timestamp(),		\
 					__log_level_str(lvl),		\
-					__FILE__,			\
+					__log_filename,			\
 					__LINE__,			\
 					__func__,			\
 					##__VA_ARGS__);			\

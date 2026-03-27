@@ -8,6 +8,7 @@
 #include "lepton_i2c.h"
 #include "shmq.h"
 #include "log.h"
+#include "errno.h"
 
 enum {
 	I2C_READ,
@@ -80,8 +81,13 @@ int main(int argc, char *argv[])
 		/* request */
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &rx_desc);
 		if (ret < 0) {
-			pr_err("SHMQ_IOC_DEQUEUE failed, ret:%d\n", ret);
-			continue;
+			if (errno == ETIMEDOUT)
+				continue;
+			else {
+				fflush(stderr);
+				fprintf(stderr, "SHMQ_IOC_DEQUEUE failed, ret:%d, %s\n", ret, strerror(errno));
+				exit(-1);
+			}
 		}
 
 		buf = rx_pool + rx_desc.offset;

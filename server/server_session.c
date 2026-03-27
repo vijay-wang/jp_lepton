@@ -324,7 +324,6 @@ static void *img_thread_fn(void *arg)
 	}
 
 	shmq_munmap_queue(pool, pool_sz);
-	shmq_destroy_queue(shmq_fd, lk.queue_id);
 
 lookup_failed:
 	shmq_close_dev(shmq_fd);
@@ -434,10 +433,8 @@ dequeue:
 	}
 
 	shmq_munmap_queue(in_pool, in_pool_sz);
-	shmq_destroy_queue(shmq_fd, in_desc.queue_id);
 
 	shmq_munmap_queue(out_pool, out_pool_sz);
-	shmq_destroy_queue(shmq_fd, out_desc.queue_id);
 
 lookup_failed:
 	shmq_close_dev(shmq_fd);
