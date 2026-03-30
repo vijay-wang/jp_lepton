@@ -25,18 +25,19 @@
 #endif
 #include "sdk_image.h"
 
-/* -------------------------------------------------------------------------
- * Portable get_u16
- * ---------------------------------------------------------------------- */
-
 static uint16_t img_get_u16(const uint8_t *p)
 {
     return (uint16_t)(((uint16_t)p[0] << 8) | p[1]);
 }
 
+static uint64_t img_get_u64(const uint8_t *p)
+{
+    return *(uint64_t *)p;
+}
+
 /* -------------------------------------------------------------------------
  * Image sub-frame wire offsets
- *  [Width 2B][Height 2B][BPP 1B][PixelFmt 1B][Reserved width*BPP*4 B]
+ *  [Width 2B][Height 2B][BPP 1B][PixelFmt 1B][timestamp 8B][Reserved width*BPP*4 B]
  *  [PixelData width*height*BPP B]
  * ---------------------------------------------------------------------- */
 
@@ -44,7 +45,8 @@ static uint16_t img_get_u16(const uint8_t *p)
 #define IMG_OFF_HEIGHT    2
 #define IMG_OFF_BPP       4
 #define IMG_OFF_PIXFMT    5
-#define IMG_HDR_FIXED     6    /* bytes before the reserved field */
+#define IMG_OFF_TIMESTAMP TIMESTAMP_OFF
+#define IMG_HDR_FIXED     HDR_LEN    /* bytes before the reserved field */
 
 /* -------------------------------------------------------------------------
  * Internal slot
@@ -215,6 +217,7 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
     uint16_t w, h;
     uint8_t  bpp, fmt;
     size_t   reserved_bytes, pixel_bytes, min_len;
+    uint64_t img_timestamp;
     img_slot_t *slot;
     int         evict_idx;
     int         i;
@@ -227,11 +230,12 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
     h   = img_get_u16(payload + IMG_OFF_HEIGHT);
     bpp = payload[IMG_OFF_BPP];
     fmt = payload[IMG_OFF_PIXFMT];
+    img_timestamp = img_get_u64(payload + IMG_OFF_TIMESTAMP);
 
     if (w == 0 || h == 0 || bpp == 0)
         return -1;
 
-    reserved_bytes = (size_t)w * (size_t)bpp * 4;
+    reserved_bytes = (size_t)w * (size_t)bpp * RESERVED_LINES;
     pixel_bytes    = (size_t)w * (size_t)h * (size_t)bpp;
     min_len        = IMG_HDR_FIXED + reserved_bytes + pixel_bytes;
 
@@ -299,6 +303,7 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
     slot->buf._owner     = mod;
     slot->in_use         = 1;
     slot->ref            = 0;
+    slot->buf.img_timestamp  = img_timestamp;
 
     mod->write_idx = (mod->write_idx + 1) % mod->depth;
     mod->count++;

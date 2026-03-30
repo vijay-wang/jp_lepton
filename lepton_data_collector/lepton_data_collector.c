@@ -98,18 +98,7 @@ static uint64_t timestamp_us(void)
 	return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
 }
 
-#define SZ_WIDTH		2
-#define SZ_HEIGHT		2
-#define SZ_BPP			1
-#define SZ_FMT			1
-#define SZ_TIMESTAMP		8
-#define HDR_LEN			(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT + SZ_TIMESTAMP)
-#define TIMESTAMP_OFF		(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT)
-#define RESERVED_OFF		HDR_LEN
-#define RESERVED_LINES		4
-#define PIXEL_SIZE_MAP_LEN	4
-
-typedef uint8_t pixel_size_arry[PIXEL_SIZE_MAP_LEN] ;
+typedef uint8_t pixel_size_arry[PIXEL_SIZE_MAP_LEN];
 
 static pixel_size_arry fmt_to_pixel_map = {
 	3, /* SDK_PIX_FMT_RGB */
@@ -201,7 +190,7 @@ static void process_image(const void *p, int size)
 			return;
 		}
 
-		buf = pool + d.offset
+		buf = pool + d.offset;
 		buf[0] = (uint8_t)(img_w >> 8);
 		buf[1] = (uint8_t)(img_w);
 		buf[2] = (uint8_t)(img_h >> 8);
@@ -768,14 +757,14 @@ int main(int argc, char **argv)
                         lepton_version_arg_found++;
                         lep_version = LEPTON_VERSION_2X;
 			img_w = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH;
-			img_y = LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
+			img_h = LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
                         break;
 
                 case '3':
                         lepton_version_arg_found++;
                         lep_version = LEPTON_VERSION_3X;
 			img_w = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2;
-			img_y = LEPTON_SUBFRAME_DATA_LINE_HEIGHT * 2;
+			img_h = LEPTON_SUBFRAME_DATA_LINE_HEIGHT * 2;
                         break;
 
                 case 'd':

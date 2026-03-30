@@ -24,6 +24,23 @@
 extern "C" {
 #endif
 
+/**
+ *  Image frame formate
+ *  [Width 2B][Height 2B][BPP 1B][PixelFmt 1B][timestamp 8B][Reserved width*BPP*4 B]
+ *  [PixelData width*height*BPP B]
+ */
+#define SZ_WIDTH		2
+#define SZ_HEIGHT		2
+#define SZ_BPP			1
+#define SZ_FMT			1
+#define SZ_TIMESTAMP		8
+#define HDR_LEN			(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT + SZ_TIMESTAMP)
+#define TIMESTAMP_OFF		(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT)
+#define RESERVED_OFF		HDR_LEN
+#define RESERVED_LINES		4
+#define PIXEL_SIZE_MAP_LEN	4
+
+
 /* -------------------------------------------------------------------------
  * Pixel formats
  * ---------------------------------------------------------------------- */
@@ -50,6 +67,7 @@ typedef struct sdk_image_buf {
     uint8_t         *pixel_data;    /* width * height * bpp bytes   */
     size_t           pixel_data_len;
     uint64_t         timestamp;     /* from outer frame             */
+    uint64_t         img_timestamp;     /* from image frame         */
 
     /* Private – do not touch */
     int              _slot;         /* index inside the ring        */

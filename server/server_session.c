@@ -253,12 +253,6 @@ static int sess_send_frame(struct server_session *sess,
  * Image sender thread  (~10 fps, 64x64 RGB fake frames)
  * -------------------------------------------------------------------- */
 
-#define IMG_W   160
-#define IMG_H   120
-#define IMG_BPP 2
-#define RESERVED_OFF 6
-#define RESERVED_LINES 4
-
 static void *img_thread_fn(void *arg)
 {
 	int ret;
@@ -269,15 +263,6 @@ static void *img_thread_fn(void *arg)
 	struct shmq_queue_id qid;
 	size_t pool_sz;
 	struct server_session *sess = (struct server_session *)arg;
-	size_t   reserved = (size_t)IMG_W * IMG_BPP * 4;
-	size_t   pixels   = (size_t)IMG_W * IMG_H * IMG_BPP;
-	size_t   total    = 6 + reserved + pixels;
-	uint8_t *frame    = calloc(1, total);
-
-	if (!frame) {
-		pr_err("[server] img thread: alloc failed\n");
-		return NULL;
-	}
 
 	shmq_fd = shmq_open_dev();
 	if (shmq_fd <= 0) {
@@ -298,34 +283,21 @@ static void *img_thread_fn(void *arg)
 
 	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
 	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
-	ret = shmq_flush(shmq_fd, &qid);
-	if (ret != 0) {
-		pr_err("shmq_flush %s failed\n", lk.name);
-		goto flush_failed;
-	}
-
-	frame[0] = (uint8_t)(IMG_W >> 8);
-	frame[1] = (uint8_t)(IMG_W);
-	frame[2] = (uint8_t)(IMG_H >> 8);
-	frame[3] = (uint8_t)(IMG_H);
-	frame[4] = IMG_BPP;
-	frame[5] = SDK_PIX_FMT_Y16;
+	// ret = shmq_flush(shmq_fd, &qid);
+	// if (ret != 0) {
+	// 	pr_err("shmq_flush %s failed\n", lk.name);
+	// 	goto flush_failed;
+	// }
 
 	while (atomic_load(&sess->running)) {
-		uint8_t *px = frame + 6 + reserved;
-
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
 		if (ret != 0) {
 			pr_err("SHMQ_IOC_DEQUEUE failed, errno:%d\n", errno);
 			continue;
 		}
 
-		memcpy(frame + RESERVED_OFF + IMG_W * IMG_BPP * RESERVED_LINES, pool + desc.offset, desc.data_size);
-
-		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, frame, total) != 0) {
+		if (sess_send_frame(sess, SDK_FRAME_TYPE_IMAGE, pool + desc.offset, desc.data_size) != 0)
 			pr_err("sess_send_frame failed\n");
-			continue;
-		}
 
 		ret = ioctl(shmq_fd, SHMQ_IOC_RELEASE, &desc);
 		if (ret != 0)
@@ -338,7 +310,7 @@ flush_failed:
 lookup_failed:
 	shmq_close_dev(shmq_fd);
 open_dev_failed:
-	free(frame);
+	pr_info("exit img_thread_fn thread\n");
 	return NULL;
 }
 
@@ -363,7 +335,7 @@ static void *cmd_thread_fn(void *arg)
 	shmq_fd = shmq_open_dev();
 	if (shmq_fd <= 0) {
 		pr_err("open shmq device failed\n");
-		return NULL;
+		goto open_dev_failed;
 	}
 
 	/* lookup and mmap lpt_cmd_in */
@@ -448,6 +420,8 @@ dequeue:
 
 lookup_failed:
 	shmq_close_dev(shmq_fd);
+open_dev_failed:
+	pr_info("exit cmd_thread_fn thread\n");
 	return NULL;
 }
 
@@ -792,6 +766,7 @@ notify:
 	sess->rx_done = 1;
 	pthread_cond_signal(&sess->done_cond);
 	pthread_mutex_unlock(&sess->done_lock);
+	pr_info("exit rx_thread_fn thread\n");
 
 	return NULL;
 }
