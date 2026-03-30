@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <unistd.h>
 #include "sdk.h"
 #include "LEPTON_SDK.h"
 #include "LEPTON_Types.h"
@@ -91,7 +90,6 @@ PERF_MEASURE_US(elapsed,
 
 	pr_debug("elapsed time: %ld us\n", (uint64_t)elapsed);
 
-	sleep(1);
 
 PERF_MEASURE_US(elapsed,
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_OPEN);
@@ -100,6 +98,8 @@ PERF_MEASURE_US(elapsed,
 		goto cci_ops_failed;
 	}
 );
+
+	pr_debug("elapsed time: %ld us\n", (uint64_t)elapsed);
 
 
 	/* enable vsync signal, and then the image streaming will start */

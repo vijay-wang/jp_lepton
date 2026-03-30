@@ -36,6 +36,10 @@
 #include <string.h>
 #include <time.h>
 
+#if !defined(_WIN32) || !defined(_WIN64)
+#include <sys/time.h>
+#endif
+
 /*
  * --------------------------------------------------------------------------
  * Log level definitions  (kept identical to linux/kern_levels.h numerics)
@@ -212,7 +216,6 @@ static inline const char *__log_timestamp(void)
 	localtime_s(&tm_local, &t);
 	tm_info = &tm_local;
 #else
-#include <sys/time.h>
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
