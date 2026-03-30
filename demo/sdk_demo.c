@@ -12,6 +12,24 @@
 
 static const char *g_ip;
 static uint16_t    g_port;
+void print_beijing_time(long long timestamp_us) {
+	time_t seconds = timestamp_us / 1000000;
+	int microseconds = timestamp_us % 1000000;
+
+	seconds += 8 * 3600;
+
+	struct tm *t = gmtime(&seconds);
+
+	printf("北京时间: %04d-%02d-%02d %02d:%02d:%02d.%06d\n",
+			t->tm_year + 1900,
+			t->tm_mon + 1,
+			t->tm_mday,
+			t->tm_hour,
+			t->tm_min,
+			t->tm_sec,
+			microseconds);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -57,14 +75,18 @@ int main(int argc, char *argv[])
 
 	/* shutter control */
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_CLOSED);
-	if (result != LEP_OK)
+	if (result != LEP_OK) {
 		pr_err("LEP_SetSysShutterPosition failed");
+		goto cci_ops_failed;
+	}
 
 	sleep(1);
 
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_OPEN);
-	if (result != LEP_OK)
+	if (result != LEP_OK) {
 		pr_err("LEP_SetSysShutterPosition failed");
+		goto cci_ops_failed;
+	}
 
 	/* get sdk version */
 	LEP_GetSDKVersion(&portDesc, &version);
@@ -73,13 +95,25 @@ int main(int argc, char *argv[])
 	/* enable vsync signal, and then the image streaming will start */
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
 	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
+	if (result != LEP_OK) {
+		pr_err("LEP_GetOemGpioMode failed");
+		goto cci_ops_failed;
+	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_VSYNC);
+	if (result != LEP_OK) {
+		pr_err("LEP_SetOemGpioMode failed");
+		goto cci_ops_failed;
+	}
 	pr_info("LEP_SetOemGpioMode result = %d.\n", result);
 
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
 	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
+	if (result != LEP_OK) {
+		pr_err("LEP_GetOemGpioMode failed");
+		goto cci_ops_failed;
+	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
 	for (int i = 0; i < 100; ++i) {
@@ -91,15 +125,22 @@ int main(int argc, char *argv[])
 
 		pr_info("width:%d, height:%d, timestamp:%ld\n",
 				buf->width, buf->height, buf->timestamp);
+		print_beijing_time(buf->timestamp);
 
 		sdk_release_image(h, buf);
 	}
 
 	/* disable vsync signal, and the the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
+	if (result != LEP_OK) {
+		pr_err("LEP_SetOemGpioMode failed");
+		goto cci_ops_failed;
+	}
 	pr_info("LEP_SetOemGpioMode result = %d.\n", result);
 
+cci_ops_failed:
 	LEP_ClosePort(&portDesc);
+
 select_dev_failed:
 open_port_failed:
 	sdk_disconnect(h);

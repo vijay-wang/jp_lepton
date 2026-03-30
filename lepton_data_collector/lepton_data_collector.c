@@ -27,6 +27,7 @@
 #include "lepton_vospi_funcs.h"
 #include "shmq.h"
 #include "log.h"
+#include "sdk_image.h"
 
 #define SHMQ_DEV "/dev/shmq"
 
@@ -58,11 +59,13 @@ static telemetry_location telemetry_loc = TELEMETRY_OFF;
 
 static lepton_vospi_info lep_info;
 static int              frame_number = 0;
-static unsigned short		*pixel_data = NULL;
-static int			fd_q;
+static unsigned short	*pixel_data = NULL;
+static int		fd_q;
 static uint32_t		qid;
-static uint8_t			*pool;
-static uint32_t		sz_shmq;
+static uint8_t		*pool;
+static uint32_t		sz_buf;
+static uint32_t		img_w;
+static uint32_t		img_h;
 
 static void sig_proc(int signo)
 {
@@ -85,6 +88,57 @@ static int xioctl(int fh, int request, void *arg)
         } while (-1 == r && EINTR == errno);
 
         return r;
+}
+
+static uint64_t timestamp_us(void)
+{
+	struct timespec ts;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
+}
+
+#define SZ_WIDTH		2
+#define SZ_HEIGHT		2
+#define SZ_BPP			1
+#define SZ_FMT			1
+#define SZ_TIMESTAMP		8
+#define HDR_LEN			(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT + SZ_TIMESTAMP)
+#define TIMESTAMP_OFF		(SZ_WIDTH + SZ_HEIGHT + SZ_BPP + SZ_FMT)
+#define RESERVED_OFF		HDR_LEN
+#define RESERVED_LINES		4
+#define PIXEL_SIZE_MAP_LEN	4
+
+typedef uint8_t pixel_size_arry[PIXEL_SIZE_MAP_LEN] ;
+
+static pixel_size_arry fmt_to_pixel_map = {
+	3, /* SDK_PIX_FMT_RGB */
+	2, /* SDK_PIX_FMT_Y16 */
+	2, /* SDK_PIX_FMT_X16 */
+	1  /* SDK_PIX_FMT_Y8  */
+};
+
+static uint8_t fmt_to_pixel_size(pixel_size_arry map, sdk_pixel_fmt_t fmt)
+{
+	return map[fmt];
+}
+
+static uint8_t max_pixel_size(pixel_size_arry map, int map_len)
+{
+	uint8_t max;
+
+	if (map == NULL || map_len <= 0) {
+		return 0;
+	}
+
+	max = map[0];
+
+	for (int i = 1; i < map_len; i++) {
+		if (map[i] > max)
+			max = map[i];
+	}
+
+	return max;
 }
 
 static void process_image(const void *p, int size)
@@ -133,14 +187,31 @@ static void process_image(const void *p, int size)
 	}
 
 	if (to_shmq) {
+		sdk_pixel_fmt_t	fmt	= SDK_PIX_FMT_Y16;
+		uint8_t bpp		= fmt_to_pixel_size(fmt_to_pixel_map, fmt);
+		size_t  reserved_len	= (size_t)img_w * bpp * RESERVED_LINES;
+		size_t  pixels_len	= (size_t)img_w * img_h * bpp;
+		size_t  pixel_off	= HDR_LEN + reserved_len;
+		size_t  total		= HDR_LEN + reserved_len + pixels_len;
+		uint8_t	*buf;
+
 		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
 		if(ret < 0) {
 			pr_info("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
 			return;
 		}
 
-		memcpy(pool + d.offset, pixel_data, sz_shmq);
-		d.data_size = sz_shmq;
+		buf = pool + d.offset
+		buf[0] = (uint8_t)(img_w >> 8);
+		buf[1] = (uint8_t)(img_w);
+		buf[2] = (uint8_t)(img_h >> 8);
+		buf[3] = (uint8_t)(img_h);
+		buf[4] = bpp;
+		buf[5] = fmt;
+		*(uint64_t *)(buf + TIMESTAMP_OFF) = timestamp_us();
+
+		memcpy(buf + pixel_off, pixel_data, total);
+		d.data_size = total;
 
 		ret = ioctl(fd_q, SHMQ_IOC_ENQUEUE, &d);
 		if(ret < 0) {
@@ -696,13 +767,15 @@ int main(int argc, char **argv)
                 case '2':
                         lepton_version_arg_found++;
                         lep_version = LEPTON_VERSION_2X;
-			sz_shmq = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2 * LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
+			img_w = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH;
+			img_y = LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
                         break;
 
                 case '3':
                         lepton_version_arg_found++;
                         lep_version = LEPTON_VERSION_3X;
-			sz_shmq = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2 * 2 * LEPTON_SUBFRAME_DATA_LINE_HEIGHT * 2;
+			img_w = LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2;
+			img_y = LEPTON_SUBFRAME_DATA_LINE_HEIGHT * 2;
                         break;
 
                 case 'd':
@@ -797,7 +870,9 @@ int main(int argc, char **argv)
         }
 
 	fd_q = shmq_open_dev();
-	qid = shmq_create_queue(fd_q, "lpt_img_shmq", 8, sz_shmq);
+	sz_buf = RESERVED_OFF + img_w * (img_h + RESERVED_LINES) *
+		max_pixel_size(fmt_to_pixel_map, PIXEL_SIZE_MAP_LEN);
+	qid = shmq_create_queue(fd_q, "lpt_img_shmq", 8, sz_buf);
 	shmq_set_timeout(fd_q, qid, 500);
 	pool = shmq_map_queue(fd_q, qid, &pool_sz);
 	pr_info("pool size:%ld\n", pool_sz);

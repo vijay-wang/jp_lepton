@@ -32,6 +32,7 @@ typedef enum sdk_pixel_fmt {
     SDK_PIX_FMT_RGB  = 0x00,
     SDK_PIX_FMT_Y16  = 0x01,
     SDK_PIX_FMT_X16  = 0x02,
+    SDK_PIX_FMT_Y8   = 0x03,
 } sdk_pixel_fmt_t;
 
 /* -------------------------------------------------------------------------
