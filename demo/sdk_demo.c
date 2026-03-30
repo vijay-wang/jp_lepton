@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
 
 	err = sdk_connect(h, g_ip, g_port);
 	if (err != SDK_OK) {
-		sdk_destroy(h);
 		pr_err("%s\n", sdk_strerror(err));
 		goto connect_failed;
 	}
@@ -147,5 +146,6 @@ open_port_failed:
 connect_failed:
 	sdk_destroy(h);
 
+	pr_info("exit sdk_demo\n");
 	return 0;
 }
