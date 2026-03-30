@@ -182,26 +182,42 @@ static inline int log_get_level(void)
 	 (lvl) == LOG_WARNING ? "WARN "   :	\
 	 (lvl) == LOG_NOTICE  ? "NOTICE"  :	\
 	 (lvl) == LOG_INFO    ? "INFO "   :	\
-	                        "DEBUG"   )
+	 "DEBUG"   )
 
 /*
  * __log_timestamp - write an ISO-8601-style wall-clock prefix
  *
- * Produces "[HH:MM:SS] " on platforms that provide time()/localtime().
+ * Produces "[HH:MM:SS.uuuuuu] "on platforms that provide time()/localtime().
  * The buffer is function-local and valid only for the duration of the call.
  */
 static inline const char *__log_timestamp(void)
 {
-	static char __ts_buf[16];
-	time_t t = time(NULL);
+	static char __ts_buf[32];
+	time_t t;
 	struct tm *tm_info;
+	long us;
 
 #if defined(_WIN32) || defined(_WIN64)
 	struct tm tm_local;
+	FILETIME ft;
+	ULONGLONG ull;
+
+	GetSystemTimeAsFileTime(&ft);
+	ull = ((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+	/*FILETIME epoch is 1601-01-01, convert to Unix epoch and extract us */
+	ull -= 116444736000000000ULL; /*100-ns intervals since 1601 -> since 1970 */
+	t  = (time_t)(ull / 10000000ULL);
+	us = (long)((ull % 10000000ULL) / 10);
 
 	localtime_s(&tm_local, &t);
 	tm_info = &tm_local;
 #else
+#include <sys/time.h>
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	t  = tv.tv_sec;
+	us = tv.tv_usec;
 	tm_info = localtime(&t);
 #endif
 
@@ -210,8 +226,9 @@ static inline const char *__log_timestamp(void)
 		return __ts_buf;
 	}
 
-	/* strftime return value deliberately ignored */
-	(void)strftime(__ts_buf, sizeof(__ts_buf), "%H:%M:%S", tm_info);
+	char hms[12];
+	(void)strftime(hms, sizeof(hms), "%H:%M:%S", tm_info);
+	snprintf(__ts_buf, sizeof(__ts_buf), "%s.%06ld", hms, us);
 	return __ts_buf;
 }
 
@@ -239,91 +256,91 @@ static inline const char *__log_timestamp(void)
 		if ((lvl) <= LOG_LEVEL) {				\
 			if ((lvl) <= log_get_level()) {			\
 				fprintf(__log_stream(lvl),		\
-					"[%s] [%s] %s:%d %s() " fmt,	\
-					__log_timestamp(),		\
-					__log_level_str(lvl),		\
-					__log_filename,			\
-					__LINE__,			\
-					__func__,			\
-					##__VA_ARGS__);			\
+						"[%s] [%s] %s:%d %s() " fmt,	\
+						__log_timestamp(),		\
+						__log_level_str(lvl),		\
+						__log_filename,			\
+						__LINE__,			\
+						__func__,			\
+##__VA_ARGS__);			\
 			}						\
 		}							\
 	} while (0)
 
-/*
- * --------------------------------------------------------------------------
- * Public pr_*() API  —  mirrors include/linux/printk.h
- * --------------------------------------------------------------------------
- */
+						/*
+						 * --------------------------------------------------------------------------
+						 * Public pr_*() API  —  mirrors include/linux/printk.h
+						 * --------------------------------------------------------------------------
+						 */
 
-/**
- * pr_emerg - log a message at LOG_EMERG level
- * @fmt: printf format string
- */
+						/**
+						 * pr_emerg - log a message at LOG_EMERG level
+						 * @fmt: printf format string
+						 */
 #define pr_emerg(fmt, ...)	__printk(LOG_EMERG,   fmt, ##__VA_ARGS__)
 
-/**
- * pr_alert - log a message at LOG_ALERT level
- * @fmt: printf format string
- */
+						/**
+						 * pr_alert - log a message at LOG_ALERT level
+						 * @fmt: printf format string
+						 */
 #define pr_alert(fmt, ...)	__printk(LOG_ALERT,   fmt, ##__VA_ARGS__)
 
-/**
- * pr_crit - log a message at LOG_CRIT level
- * @fmt: printf format string
- */
+						/**
+						 * pr_crit - log a message at LOG_CRIT level
+						 * @fmt: printf format string
+						 */
 #define pr_crit(fmt, ...)	__printk(LOG_CRIT,    fmt, ##__VA_ARGS__)
 
-/**
- * pr_err - log a message at LOG_ERR level
- * @fmt: printf format string
- */
+						/**
+						 * pr_err - log a message at LOG_ERR level
+						 * @fmt: printf format string
+						 */
 #define pr_err(fmt, ...)	__printk(LOG_ERR,     fmt, ##__VA_ARGS__)
 
-/**
- * pr_warn - log a message at LOG_WARNING level
- * @fmt: printf format string
- */
+						/**
+						 * pr_warn - log a message at LOG_WARNING level
+						 * @fmt: printf format string
+						 */
 #define pr_warn(fmt, ...)	__printk(LOG_WARNING, fmt, ##__VA_ARGS__)
 
-/**
- * pr_notice - log a message at LOG_NOTICE level
- * @fmt: printf format string
- */
+						/**
+						 * pr_notice - log a message at LOG_NOTICE level
+						 * @fmt: printf format string
+						 */
 #define pr_notice(fmt, ...)	__printk(LOG_NOTICE,  fmt, ##__VA_ARGS__)
 
-/**
- * pr_info - log a message at LOG_INFO level
- * @fmt: printf format string
- */
+						/**
+						 * pr_info - log a message at LOG_INFO level
+						 * @fmt: printf format string
+						 */
 #define pr_info(fmt, ...)	__printk(LOG_INFO,    fmt, ##__VA_ARGS__)
 
-/**
- * pr_debug - log a message at LOG_DEBUG level
- * @fmt: printf format string
- *
- * Note: compiled out entirely unless LOG_LEVEL >= LOG_DEBUG.
- */
+						/**
+						 * pr_debug - log a message at LOG_DEBUG level
+						 * @fmt: printf format string
+						 *
+						 * Note: compiled out entirely unless LOG_LEVEL >= LOG_DEBUG.
+						 */
 #define pr_debug(fmt, ...)	__printk(LOG_DEBUG,   fmt, ##__VA_ARGS__)
 
-/*
- * pr_devel - alias for pr_debug, for development-only instrumentation
- *
- * Matches the convention used in <linux/printk.h>.
- */
+						/*
+						 * pr_devel - alias for pr_debug, for development-only instrumentation
+						 *
+						 * Matches the convention used in <linux/printk.h>.
+						 */
 #define pr_devel(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
 
-/*
- * pr_cont - append to the previous log line (best-effort; no location info)
- *
- * Mirrors the kernel pr_cont() which continues the previous line.  On
- * userspace there is no atomic line-continuation guarantee, but the
- * runtime level gate is still honoured.
- */
+						/*
+						 * pr_cont - append to the previous log line (best-effort; no location info)
+						 *
+						 * Mirrors the kernel pr_cont() which continues the previous line.  On
+						 * userspace there is no atomic line-continuation guarantee, but the
+						 * runtime level gate is still honoured.
+						 */
 #define pr_cont(fmt, ...)						\
-	do {								\
-		if (LOG_INFO <= log_get_level())			\
-			fprintf(stdout, fmt, ##__VA_ARGS__);		\
-	} while (0)
+							do {								\
+								if (LOG_INFO <= log_get_level())			\
+								fprintf(stdout, fmt, ##__VA_ARGS__);		\
+							} while (0)
 
 #endif /* _LOG_H */

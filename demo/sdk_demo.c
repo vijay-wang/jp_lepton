@@ -20,14 +20,14 @@ void print_beijing_time(long long timestamp_us) {
 
 	struct tm *t = gmtime(&seconds);
 
-	printf("Beijing time: %04d-%02d-%02d %02d:%02d:%02d.%06d\n",
+	pr_debug("Beijing time: %04d-%02d-%02d %02d:%02d:%02d.%06d, %llu\n",
 			t->tm_year + 1900,
 			t->tm_mon + 1,
 			t->tm_mday,
 			t->tm_hour,
 			t->tm_min,
 			t->tm_sec,
-			microseconds);
+			microseconds, timestamp_us);
 }
 
 

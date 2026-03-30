@@ -283,11 +283,11 @@ static void *img_thread_fn(void *arg)
 
 	shmq_set_timeout(shmq_fd, lk.queue_id, 500);
 	pool = shmq_map_queue(shmq_fd, lk.queue_id, &pool_sz);
-	// ret = shmq_flush(shmq_fd, &qid);
-	// if (ret != 0) {
-	// 	pr_err("shmq_flush %s failed\n", lk.name);
-	// 	goto flush_failed;
-	// }
+	ret = shmq_flush(shmq_fd, &qid);
+	if (ret != 0) {
+		pr_err("shmq_flush %s failed\n", lk.name);
+		goto flush_failed;
+	}
 
 	while (atomic_load(&sess->running)) {
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
