@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include "sdk.h"
 #include "LEPTON_SDK.h"
@@ -6,6 +7,7 @@
 #include "LEPTON_SYS.h"
 #include "LEPTON_OEM.h"
 #include "log.h"
+#include "perf_tick.h"
 
 #define SERVER_IP_DEFAULT   "192.168.21.2"
 #define SERVER_PORT_DEFAULT 8080
@@ -72,24 +74,33 @@ int main(int argc, char *argv[])
 		goto open_port_failed;
 	}
 
+	/* get sdk version */
+	LEP_GetSDKVersion(&portDesc, &version);
+	pr_info("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
+
 	/* shutter control */
+uint64_t elapsed;
+
+PERF_MEASURE_US(elapsed,
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_CLOSED);
 	if (result != LEP_OK) {
 		pr_err("LEP_SetSysShutterPosition failed");
 		goto cci_ops_failed;
 	}
+);
+
+	pr_debug("elapsed time: %ld us\n", (uint64_t)elapsed);
 
 	sleep(1);
 
+PERF_MEASURE_US(elapsed,
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_OPEN);
 	if (result != LEP_OK) {
 		pr_err("LEP_SetSysShutterPosition failed");
 		goto cci_ops_failed;
 	}
+);
 
-	/* get sdk version */
-	LEP_GetSDKVersion(&portDesc, &version);
-	pr_info("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
 
 	/* enable vsync signal, and then the image streaming will start */
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
@@ -115,16 +126,15 @@ int main(int argc, char *argv[])
 	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
-	for (int i = 0; i < 100; ++i) {
-		sdk_image_buf_t *buf = sdk_recv_image(h, 100);
+	for (int i = 0; i < 10; ++i) {
+		sdk_image_buf_t *buf = sdk_recv_image(h, 120);
 		if (buf == NULL) {
 			pr_info("timeout or network error\n");
 			continue;
 		}
 
-		pr_info("width:%d, height:%d, timestamp:%ld\n",
-				buf->width, buf->height, buf->timestamp);
 		print_beijing_time(buf->timestamp);
+		print_beijing_time(buf->img_timestamp);
 
 		sdk_release_image(h, buf);
 	}
