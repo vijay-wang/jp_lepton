@@ -59,6 +59,18 @@ int main(int argc, char *argv[])
 		goto connect_failed;
 	}
 
+	/* Upload a local buffer to a path on the device */
+	err = sdk_send_file(h, "/tmp/test.txt", "wangwenjie", 10, 20);
+	if (err != SDK_OK)
+		pr_err("send file failed %s\n", sdk_strerror(err));
+
+	/* Download a file frome a path on the device */
+	uint8_t *recv_file_buf = (uint8_t *)malloc(4 * 1024 * 1024);
+	size_t recv_file_len;
+	err = sdk_recv_file(h, "/cmake_install.cmake", &recv_file_buf, &recv_file_len, 500);
+	free(recv_file_buf);
+	pr_info("read file length: %ld\n", recv_file_len);
+
 	portDesc.cci_handle = h;
 	portDesc.portType = LEP_CCI_TWI;
 	result = LEP_SelectDevice(&portDesc, MAC_COM);
@@ -142,7 +154,7 @@ PERF_MEASURE_US(elapsed,
 	/* disable vsync signal, and the the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
 	if (result != LEP_OK) {
-		pr_err("LEP_SetOemGpioMode failed");
+		pr_err("LEP_SetOemGpioMode failed\n");
 		goto cci_ops_failed;
 	}
 	pr_info("LEP_SetOemGpioMode result = %d.\n", result);

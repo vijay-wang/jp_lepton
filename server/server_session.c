@@ -189,7 +189,7 @@ static int fq_pop(struct frame_queue *q, struct queued_frame *out,
 	int ret = 0;
 
 	pthread_mutex_lock(&q->lock);
-	while (q->count == 0) {
+	for (; q->count == 0; ) {
 		if (timeout_ms < 0) {
 			pthread_cond_wait(&q->cond, &q->lock);
 		} else {
@@ -289,7 +289,7 @@ static void *img_thread_fn(void *arg)
 		goto flush_failed;
 	}
 
-	while (atomic_load(&sess->running)) {
+	for (; atomic_load(&sess->running); ) {
 		ret = ioctl(shmq_fd, SHMQ_IOC_DEQUEUE, &desc);
 		if (ret != 0) {
 			pr_err("SHMQ_IOC_DEQUEUE failed, errno:%d\n", errno);
@@ -364,7 +364,7 @@ static void *cmd_thread_fn(void *arg)
 	out_pool = shmq_map_queue(shmq_fd, lk.queue_id, &out_pool_sz);
 	pr_info("lookup lpt_cmd_out qid = %d\n", lk.queue_id);
 
-	while (atomic_load(&sess->running)) {
+	for (; atomic_load(&sess->running); ) {
 		struct queued_frame qf;
 		uint8_t flag;
 		sdk_cmd_request_t request;
@@ -433,13 +433,14 @@ static void *file_thread_fn(void *arg)
 {
 	struct server_session *sess = (struct server_session *)arg;
 
-	for (;;) {
+	for ( ; atomic_load(&sess->running); ) {
 		struct queued_frame qf;
 		uint8_t flag;
 		int r = fq_pop(&sess->file_queue, &qf, -1);
 
 		if (r == -1)
 			break;
+
 		if (r == -2)
 			continue;
 
@@ -667,6 +668,8 @@ static void *file_thread_fn(void *arg)
 
 		free(qf.payload);
 	}
+
+	pr_info("exit file_thread_fn thread\n");
 	return NULL;
 }
 
@@ -687,7 +690,7 @@ static void *rx_thread_fn(void *arg)
 		goto notify;
 	}
 
-	while (atomic_load(&sess->running)) {
+	for (; atomic_load(&sess->running); ) {
 		size_t    received = 0;
 		net_err_t err;
 
@@ -844,7 +847,7 @@ void server_session_wait(server_session_t *sess)
 		return;
 
 	pthread_mutex_lock(&sess->done_lock);
-	while (!sess->rx_done)
+	for (; !sess->rx_done; )
 		pthread_cond_wait(&sess->done_cond, &sess->done_lock);
 	pthread_mutex_unlock(&sess->done_lock);
 }
