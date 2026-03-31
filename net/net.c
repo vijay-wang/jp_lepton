@@ -43,12 +43,12 @@
 
 net_err_t net_init(void)
 {
-    return PLATFORM_INIT();
+	return PLATFORM_INIT();
 }
 
 void net_cleanup(void)
 {
-    PLATFORM_CLEANUP();
+	PLATFORM_CLEANUP();
 }
 
 /* -------------------------------------------------------------------------
@@ -57,12 +57,12 @@ void net_cleanup(void)
 
 net_socket_t *net_socket_create(void)
 {
-    return PLATFORM_SOCKET_CREATE();
+	return PLATFORM_SOCKET_CREATE();
 }
 
 void net_socket_destroy(net_socket_t *sock)
 {
-    PLATFORM_SOCKET_DESTROY(sock);
+	PLATFORM_SOCKET_DESTROY(sock);
 }
 
 /* -------------------------------------------------------------------------
@@ -71,17 +71,17 @@ void net_socket_destroy(net_socket_t *sock)
 
 net_err_t net_server_bind(net_socket_t *sock, const net_addr_t *addr)
 {
-    return PLATFORM_SERVER_BIND(sock, addr);
+	return PLATFORM_SERVER_BIND(sock, addr);
 }
 
 net_err_t net_server_listen(net_socket_t *sock, int backlog)
 {
-    return PLATFORM_SERVER_LISTEN(sock, backlog);
+	return PLATFORM_SERVER_LISTEN(sock, backlog);
 }
 
 net_socket_t *net_server_accept(net_socket_t *sock, net_addr_t *peer_addr)
 {
-    return PLATFORM_SERVER_ACCEPT(sock, peer_addr);
+	return PLATFORM_SERVER_ACCEPT(sock, peer_addr);
 }
 
 /* -------------------------------------------------------------------------
@@ -90,7 +90,7 @@ net_socket_t *net_server_accept(net_socket_t *sock, net_addr_t *peer_addr)
 
 net_err_t net_client_connect(net_socket_t *sock, const net_addr_t *addr)
 {
-    return PLATFORM_CLIENT_CONNECT(sock, addr);
+	return PLATFORM_CLIENT_CONNECT(sock, addr);
 }
 
 /* -------------------------------------------------------------------------
@@ -98,15 +98,15 @@ net_err_t net_client_connect(net_socket_t *sock, const net_addr_t *addr)
  * ---------------------------------------------------------------------- */
 
 net_err_t net_send(net_socket_t *sock, const void *buf, size_t len,
-                   size_t *sent)
+		size_t *sent)
 {
-    return PLATFORM_SEND(sock, buf, len, sent);
+	return PLATFORM_SEND(sock, buf, len, sent);
 }
 
 net_err_t net_recv(net_socket_t *sock, void *buf, size_t buf_len,
-                   size_t *received)
+		size_t *received)
 {
-    return PLATFORM_RECV(sock, buf, buf_len, received);
+	return PLATFORM_RECV(sock, buf, buf_len, received);
 }
 
 /* -------------------------------------------------------------------------
@@ -115,20 +115,20 @@ net_err_t net_recv(net_socket_t *sock, void *buf, size_t buf_len,
 
 const char *net_strerror(net_err_t err)
 {
-    switch (err) {
-    case NET_OK:          return "Success";
-    case NET_ERR_GENERIC: return "Generic error";
-    case NET_ERR_INIT:    return "Subsystem initialisation failed";
-    case NET_ERR_PARAM:   return "Invalid parameter";
-    case NET_ERR_BIND:    return "Bind failed";
-    case NET_ERR_LISTEN:  return "Listen failed";
-    case NET_ERR_CONNECT: return "Connect failed";
-    case NET_ERR_ACCEPT:  return "Accept failed";
-    case NET_ERR_SEND:    return "Send failed";
-    case NET_ERR_RECV:    return "Receive failed";
-    case NET_ERR_TIMEOUT: return "Operation timed out";
-    case NET_ERR_CLOSED:  return "Connection closed by peer";
-    case NET_ERR_NOMEM:   return "Out of memory";
-    default:              return "Unknown error";
-    }
+	switch (err) {
+	case NET_OK:          return "Success";
+	case NET_ERR_GENERIC: return "Generic error";
+	case NET_ERR_INIT:    return "Subsystem initialisation failed";
+	case NET_ERR_PARAM:   return "Invalid parameter";
+	case NET_ERR_BIND:    return "Bind failed";
+	case NET_ERR_LISTEN:  return "Listen failed";
+	case NET_ERR_CONNECT: return "Connect failed";
+	case NET_ERR_ACCEPT:  return "Accept failed";
+	case NET_ERR_SEND:    return "Send failed";
+	case NET_ERR_RECV:    return "Receive failed";
+	case NET_ERR_TIMEOUT: return "Operation timed out";
+	case NET_ERR_CLOSED:  return "Connection closed by peer";
+	case NET_ERR_NOMEM:   return "Out of memory";
+	default:              return "Unknown error";
+	}
 }

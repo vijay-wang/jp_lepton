@@ -39,175 +39,175 @@
 extern "C" {
 #endif
 
-/* -------------------------------------------------------------------------
- * Error codes
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Error codes
+	 * ---------------------------------------------------------------------- */
 
-typedef enum sdk_err {
-    SDK_OK              =  0,
-    SDK_ERR_PARAM       = -1,
-    SDK_ERR_NOMEM       = -2,
-    SDK_ERR_NET         = -3,
-    SDK_ERR_TIMEOUT     = -4,
-    SDK_ERR_PROTO       = -5,   /* frame parse / CRC error              */
-    SDK_ERR_REMOTE      = -6,   /* server returned non-zero ret_code    */
-    SDK_ERR_IO          = -7,   /* local file I/O error                 */
-    SDK_ERR_STATE       = -8,   /* wrong SDK state (e.g. not connected) */
-} sdk_err_t;
+	typedef enum sdk_err {
+		SDK_OK              =  0,
+		SDK_ERR_PARAM       = -1,
+		SDK_ERR_NOMEM       = -2,
+		SDK_ERR_NET         = -3,
+		SDK_ERR_TIMEOUT     = -4,
+		SDK_ERR_PROTO       = -5,   /* frame parse / CRC error              */
+		SDK_ERR_REMOTE      = -6,   /* server returned non-zero ret_code    */
+		SDK_ERR_IO          = -7,   /* local file I/O error                 */
+		SDK_ERR_STATE       = -8,   /* wrong SDK state (e.g. not connected) */
+	} sdk_err_t;
 
-/* -------------------------------------------------------------------------
- * Configuration
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Configuration
+	 * ---------------------------------------------------------------------- */
 
-typedef struct sdk_config {
-    int image_queue_depth;  /* rotating image queue depth, default 4       */
-    int cmd_timeout_ms;     /* default timeout for cmd round-trips, ms     */
-    int file_timeout_ms;    /* default timeout for file transfers, ms      */
-} sdk_config_t;
+	typedef struct sdk_config {
+		int image_queue_depth;  /* rotating image queue depth, default 4       */
+		int cmd_timeout_ms;     /* default timeout for cmd round-trips, ms     */
+		int file_timeout_ms;    /* default timeout for file transfers, ms      */
+	} sdk_config_t;
 
 #define SDK_CONFIG_DEFAULT { .image_queue_depth = 4,   \
-                             .cmd_timeout_ms    = 2000, \
-                             .file_timeout_ms   = 30000 }
+	.cmd_timeout_ms    = 2000, \
+	.file_timeout_ms   = 30000 }
 
-/* -------------------------------------------------------------------------
- * CMD result returned to the caller
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * CMD result returned to the caller
+	 * ---------------------------------------------------------------------- */
 
-typedef struct sdk_cmd_result {
-    uint32_t  ret_code;         /* 0 = success                        */
-    uint8_t  *data;             /* valid only for READ_ACK, heap-alloc*/
-    size_t    data_len;         /* 0 for write ack                    */
-} sdk_cmd_result_t;
+	typedef struct sdk_cmd_result {
+		uint32_t  ret_code;         /* 0 = success                        */
+		uint8_t  *data;             /* valid only for READ_ACK, heap-alloc*/
+		size_t    data_len;         /* 0 for write ack                    */
+	} sdk_cmd_result_t;
 
-/**
- * sdk_cmd_result_free - Free heap memory inside a sdk_cmd_result_t.
- */
-void sdk_cmd_result_free(sdk_cmd_result_t *r);
+	/**
+	 * sdk_cmd_result_free - Free heap memory inside a sdk_cmd_result_t.
+	 */
+	void sdk_cmd_result_free(sdk_cmd_result_t *r);
 
-/* -------------------------------------------------------------------------
- * Opaque SDK handle
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Opaque SDK handle
+	 * ---------------------------------------------------------------------- */
 
-typedef struct sdk_handle sdk_handle_t;
+	typedef struct sdk_handle sdk_handle_t;
 
-/* -------------------------------------------------------------------------
- * Lifecycle
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Lifecycle
+	 * ---------------------------------------------------------------------- */
 
-/**
- * sdk_create - Allocate and initialise the SDK.
- *
- * @cfg: Configuration; NULL uses SDK_CONFIG_DEFAULT.
- *
- * Returns: SDK handle on success, NULL on failure.
- */
-sdk_handle_t *sdk_create(const sdk_config_t *cfg);
+	/**
+	 * sdk_create - Allocate and initialise the SDK.
+	 *
+	 * @cfg: Configuration; NULL uses SDK_CONFIG_DEFAULT.
+	 *
+	 * Returns: SDK handle on success, NULL on failure.
+	 */
+	sdk_handle_t *sdk_create(const sdk_config_t *cfg);
 
-/**
- * sdk_destroy - Tear down and free the SDK handle.
- *
- * Disconnects if still connected. @h may be NULL.
- */
-void sdk_destroy(sdk_handle_t *h);
+	/**
+	 * sdk_destroy - Tear down and free the SDK handle.
+	 *
+	 * Disconnects if still connected. @h may be NULL.
+	 */
+	void sdk_destroy(sdk_handle_t *h);
 
-/**
- * sdk_connect - Establish a TCP connection to the server.
- *
- * @h:    SDK handle.
- * @ip:   Server IP address string.
- * @port: Server port (host byte order).
- *
- * Returns: SDK_OK on success, negative sdk_err_t on failure.
- */
-sdk_err_t sdk_connect(sdk_handle_t *h, const char *ip, uint16_t port);
+	/**
+	 * sdk_connect - Establish a TCP connection to the server.
+	 *
+	 * @h:    SDK handle.
+	 * @ip:   Server IP address string.
+	 * @port: Server port (host byte order).
+	 *
+	 * Returns: SDK_OK on success, negative sdk_err_t on failure.
+	 */
+	sdk_err_t sdk_connect(sdk_handle_t *h, const char *ip, uint16_t port);
 
-/**
- * sdk_disconnect - Close the TCP connection and stop the receive thread.
- *
- * Safe to call if not connected.
- */
-void sdk_disconnect(sdk_handle_t *h);
+	/**
+	 * sdk_disconnect - Close the TCP connection and stop the receive thread.
+	 *
+	 * Safe to call if not connected.
+	 */
+	void sdk_disconnect(sdk_handle_t *h);
 
-/* -------------------------------------------------------------------------
- * Image interface
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Image interface
+	 * ---------------------------------------------------------------------- */
 
-/**
- * sdk_recv_image - Dequeue the oldest received image.
- *
- * Blocks up to @timeout_ms milliseconds.
- * The caller must call sdk_release_image() when done.
- *
- * Returns: Image buffer on success, NULL on timeout.
- */
-sdk_image_buf_t *sdk_recv_image(sdk_handle_t *h, int timeout_ms);
+	/**
+	 * sdk_recv_image - Dequeue the oldest received image.
+	 *
+	 * Blocks up to @timeout_ms milliseconds.
+	 * The caller must call sdk_release_image() when done.
+	 *
+	 * Returns: Image buffer on success, NULL on timeout.
+	 */
+	sdk_image_buf_t *sdk_recv_image(sdk_handle_t *h, int timeout_ms);
 
-/**
- * sdk_release_image - Release an image buffer back to the pool.
- */
-void sdk_release_image(sdk_handle_t *h, sdk_image_buf_t *img);
+	/**
+	 * sdk_release_image - Release an image buffer back to the pool.
+	 */
+	void sdk_release_image(sdk_handle_t *h, sdk_image_buf_t *img);
 
-/* -------------------------------------------------------------------------
- * Command interface
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * Command interface
+	 * ---------------------------------------------------------------------- */
 
-/**
- * sdk_send_cmd - Send a write command to the server.
- *
- * @h:          SDK handle.
- * @flag:	CMD flag
- * @data:       Data to write.
- * @data_len:   Number of bytes.
- * @result:     Output; filled with the server's write-ack.
- * @timeout_ms: How long to wait for the ack (0 = use cfg default).
- *
- * Returns: SDK_OK on success.
- */
-sdk_err_t sdk_send_cmd(sdk_handle_t *h, uint8_t flag, const uint8_t *data,
-                              size_t data_len, sdk_cmd_result_t *result,
-                              int timeout_ms);
+	/**
+	 * sdk_send_cmd - Send a write command to the server.
+	 *
+	 * @h:          SDK handle.
+	 * @flag:	CMD flag
+	 * @data:       Data to write.
+	 * @data_len:   Number of bytes.
+	 * @result:     Output; filled with the server's write-ack.
+	 * @timeout_ms: How long to wait for the ack (0 = use cfg default).
+	 *
+	 * Returns: SDK_OK on success.
+	 */
+	sdk_err_t sdk_send_cmd(sdk_handle_t *h, uint8_t flag, const uint8_t *data,
+			size_t data_len, sdk_cmd_result_t *result,
+			int timeout_ms);
 
-/* -------------------------------------------------------------------------
- * File interface
- * ---------------------------------------------------------------------- */
+	/* -------------------------------------------------------------------------
+	 * File interface
+	 * ---------------------------------------------------------------------- */
 
-/**
- * sdk_send_file - Upload a local buffer to a path on the device.
- *
- * @h:           SDK handle.
- * @remote_path: Destination path on the device (max 255 chars).
- * @data:        File content.
- * @data_len:    Number of bytes.
- * @timeout_ms:  Per-packet timeout (0 = use cfg default).
- *
- * Returns: SDK_OK on success.
- */
-sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
-                         const uint8_t *data, size_t data_len,
-                         int timeout_ms);
+	/**
+	 * sdk_send_file - Upload a local buffer to a path on the device.
+	 *
+	 * @h:           SDK handle.
+	 * @remote_path: Destination path on the device (max 255 chars).
+	 * @data:        File content.
+	 * @data_len:    Number of bytes.
+	 * @timeout_ms:  Per-packet timeout (0 = use cfg default).
+	 *
+	 * Returns: SDK_OK on success.
+	 */
+	sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
+			const uint8_t *data, size_t data_len,
+			int timeout_ms);
 
-/**
- * sdk_recv_file - Download a file from a path on the device.
- *
- * On success, *out_data is a heap-allocated buffer of *out_len bytes.
- * The caller is responsible for free()ing *out_data.
- *
- * @h:           SDK handle.
- * @remote_path: Source path on the device.
- * @out_data:    Receives pointer to allocated file content.
- * @out_len:     Receives length of the content.
- * @timeout_ms:  Per-packet timeout (0 = use cfg default).
- *
- * Returns: SDK_OK on success.
- */
-sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
-                         uint8_t **out_data, size_t *out_len,
-                         int timeout_ms);
+	/**
+	 * sdk_recv_file - Download a file from a path on the device.
+	 *
+	 * On success, *out_data is a heap-allocated buffer of *out_len bytes.
+	 * The caller is responsible for free()ing *out_data.
+	 *
+	 * @h:           SDK handle.
+	 * @remote_path: Source path on the device.
+	 * @out_data:    Receives pointer to allocated file content.
+	 * @out_len:     Receives length of the content.
+	 * @timeout_ms:  Per-packet timeout (0 = use cfg default).
+	 *
+	 * Returns: SDK_OK on success.
+	 */
+	sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
+			uint8_t **out_data, size_t *out_len,
+			int timeout_ms);
 
-/**
- * sdk_strerror - Return a human-readable string for an sdk_err_t code.
- */
-const char *sdk_strerror(sdk_err_t err);
+	/**
+	 * sdk_strerror - Return a human-readable string for an sdk_err_t code.
+	 */
+	const char *sdk_strerror(sdk_err_t err);
 
 #ifdef __cplusplus
 }

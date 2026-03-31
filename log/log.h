@@ -259,91 +259,91 @@ static inline const char *__log_timestamp(void)
 		if ((lvl) <= LOG_LEVEL) {				\
 			if ((lvl) <= log_get_level()) {			\
 				fprintf(__log_stream(lvl),		\
-						"[%s] [%s] %s:%d %s() " fmt,	\
-						__log_timestamp(),		\
-						__log_level_str(lvl),		\
-						__log_filename,			\
-						__LINE__,			\
-						__func__,			\
-##__VA_ARGS__);			\
+					"[%s] [%s] %s:%d %s() " fmt,	\
+					__log_timestamp(),		\
+					__log_level_str(lvl),		\
+					__log_filename,			\
+					__LINE__,			\
+					__func__,			\
+					##__VA_ARGS__);			\
 			}						\
 		}							\
 	} while (0)
 
-						/*
-						 * --------------------------------------------------------------------------
-						 * Public pr_*() API  —  mirrors include/linux/printk.h
-						 * --------------------------------------------------------------------------
-						 */
+/*
+ * --------------------------------------------------------------------------
+ * Public pr_*() API  —  mirrors include/linux/printk.h
+ * --------------------------------------------------------------------------
+ */
 
-						/**
-						 * pr_emerg - log a message at LOG_EMERG level
-						 * @fmt: printf format string
-						 */
+/**
+ * pr_emerg - log a message at LOG_EMERG level
+ * @fmt: printf format string
+ */
 #define pr_emerg(fmt, ...)	__printk(LOG_EMERG,   fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_alert - log a message at LOG_ALERT level
-						 * @fmt: printf format string
-						 */
+/**
+ * pr_alert - log a message at LOG_ALERT level
+ * @fmt: printf format string
+ */
 #define pr_alert(fmt, ...)	__printk(LOG_ALERT,   fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_crit - log a message at LOG_CRIT level
-						 * @fmt: printf format string
-						 */
+/**
+ * pr_crit - log a message at LOG_CRIT level
+ * @fmt: printf format string
+ */
 #define pr_crit(fmt, ...)	__printk(LOG_CRIT,    fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_err - log a message at LOG_ERR level
-						 * @fmt: printf format string
-						 */
+/**
+ * pr_err - log a message at LOG_ERR level
+ * @fmt: printf format string
+ */
 #define pr_err(fmt, ...)	__printk(LOG_ERR,     fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_warn - log a message at LOG_WARNING level
-						 * @fmt: printf format string
-						 */
+/**
+* pr_warn - log a message at LOG_WARNING level
+* @fmt: printf format string
+*/
 #define pr_warn(fmt, ...)	__printk(LOG_WARNING, fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_notice - log a message at LOG_NOTICE level
-						 * @fmt: printf format string
-						 */
+/**
+* pr_notice - log a message at LOG_NOTICE level
+* @fmt: printf format string
+*/
 #define pr_notice(fmt, ...)	__printk(LOG_NOTICE,  fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_info - log a message at LOG_INFO level
-						 * @fmt: printf format string
-						 */
+/**
+* pr_info - log a message at LOG_INFO level
+* @fmt: printf format string
+*/
 #define pr_info(fmt, ...)	__printk(LOG_INFO,    fmt, ##__VA_ARGS__)
 
-						/**
-						 * pr_debug - log a message at LOG_DEBUG level
-						 * @fmt: printf format string
-						 *
-						 * Note: compiled out entirely unless LOG_LEVEL >= LOG_DEBUG.
-						 */
+/**
+* pr_debug - log a message at LOG_DEBUG level
+* @fmt: printf format string
+*
+* Note: compiled out entirely unless LOG_LEVEL >= LOG_DEBUG.
+*/
 #define pr_debug(fmt, ...)	__printk(LOG_DEBUG,   fmt, ##__VA_ARGS__)
 
-						/*
-						 * pr_devel - alias for pr_debug, for development-only instrumentation
-						 *
-						 * Matches the convention used in <linux/printk.h>.
-						 */
+/*
+* pr_devel - alias for pr_debug, for development-only instrumentation
+*
+* Matches the convention used in <linux/printk.h>.
+*/
 #define pr_devel(fmt, ...)	pr_debug(fmt, ##__VA_ARGS__)
 
-						/*
-						 * pr_cont - append to the previous log line (best-effort; no location info)
-						 *
-						 * Mirrors the kernel pr_cont() which continues the previous line.  On
-						 * userspace there is no atomic line-continuation guarantee, but the
-						 * runtime level gate is still honoured.
-						 */
-#define pr_cont(fmt, ...)						\
-							do {								\
-								if (LOG_INFO <= log_get_level())			\
-								fprintf(stdout, fmt, ##__VA_ARGS__);		\
-							} while (0)
+/*
+* pr_cont - append to the previous log line (best-effort; no location info)
+*
+* Mirrors the kernel pr_cont() which continues the previous line.  On
+* userspace there is no atomic line-continuation guarantee, but the
+* runtime level gate is still honoured.
+*/
+#define pr_cont(fmt, ...)	\
+	do {	\
+		if (LOG_INFO <= log_get_level())	\
+		fprintf(stdout, fmt, ##__VA_ARGS__);	\
+	} while (0)
 
 #endif /* _LOG_H */

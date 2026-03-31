@@ -38,18 +38,18 @@
 #define SDK_PENDING_ERR    3
 
 typedef struct sdk_pending_req {
-    int      state;         /* SDK_PENDING_* */
+	int      state;         /* SDK_PENDING_* */
 
-    /* Response payload – heap-allocated by the rx thread */
-    uint8_t *rsp_payload;
-    size_t   rsp_len;
+	/* Response payload – heap-allocated by the rx thread */
+	uint8_t *rsp_payload;
+	size_t   rsp_len;
 
 #ifdef _WIN32
-    CRITICAL_SECTION lock;
-    CONDITION_VARIABLE cond;
+	CRITICAL_SECTION lock;
+	CONDITION_VARIABLE cond;
 #else
-    pthread_mutex_t  lock;
-    pthread_cond_t   cond;
+	pthread_mutex_t  lock;
+	pthread_cond_t   cond;
 #endif
 } sdk_pending_req_t;
 
@@ -58,23 +58,23 @@ typedef struct sdk_pending_req {
  * ---------------------------------------------------------------------- */
 
 struct sdk_handle {
-    sdk_config_t         cfg;
-    net_socket_t        *sock;
-    sdk_image_module_t  *image_mod;
+	sdk_config_t         cfg;
+	net_socket_t        *sock;
+	sdk_image_module_t  *image_mod;
 
-    /* Receive thread */
+	/* Receive thread */
 #ifdef _WIN32
-    HANDLE               rx_thread;
-    CRITICAL_SECTION     state_lock;
+	HANDLE               rx_thread;
+	CRITICAL_SECTION     state_lock;
 #else
-    pthread_t            rx_thread;
-    pthread_mutex_t      state_lock;
+	pthread_t            rx_thread;
+	pthread_mutex_t      state_lock;
 #endif
-    int                  rx_running;   /* 1 while rx thread is alive */
-    int                  connected;
+	int                  rx_running;   /* 1 while rx thread is alive */
+	int                  connected;
 
-    /* Single pending request slot (cmd or file, one at a time) */
-    sdk_pending_req_t    pending;
+	/* Single pending request slot (cmd or file, one at a time) */
+	sdk_pending_req_t    pending;
 };
 
 /* -------------------------------------------------------------------------
@@ -93,13 +93,13 @@ void sdk_pending_post_err(sdk_pending_req_t *r);
  * On success returns 0 and the caller owns *payload.
  * Returns -1 on timeout or error. */
 int  sdk_pending_wait(sdk_pending_req_t *r, int timeout_ms,
-                      uint8_t **payload, size_t *len);
+		uint8_t **payload, size_t *len);
 
 /* Arm the pending slot before sending a request */
 void sdk_pending_arm(sdk_pending_req_t *r);
 
 /* Send one outer frame (thread-safe via sock being one-writer). */
 int  sdk_send_frame(sdk_handle_t *h, sdk_frame_type_t type,
-                    const uint8_t *payload, size_t payload_len);
+		const uint8_t *payload, size_t payload_len);
 
 #endif /* SDK_INTERNAL_H */
