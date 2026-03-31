@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
+#include <libgen.h>
 #include <sys/ioctl.h>
 
 #include "net.h"
@@ -423,6 +424,24 @@ lookup_failed:
 open_dev_failed:
 	pr_info("exit cmd_thread_fn thread\n");
 	return NULL;
+}
+
+static int dir_of_path_exists(char *path)
+{
+	if (!path || !*path)
+		return 0;
+
+	/*dirname() may modify the string, work on a copy */
+	char buf[strlen(path) + 1];
+	strcpy(buf, path);
+
+	char *dir = dirname(buf);
+
+	struct stat st;
+	if (stat(dir, &st) != 0)
+		return 0;
+
+	return S_ISDIR(st.st_mode);
 }
 
 /* -----------------------------------------------------------------------

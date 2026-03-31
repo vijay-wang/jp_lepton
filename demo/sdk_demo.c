@@ -60,16 +60,24 @@ int main(int argc, char *argv[])
 	}
 
 	/* Upload a local buffer to a path on the device */
-	err = sdk_send_file(h, "/tmp/test.txt", "wangwenjie", 10, 20);
+#define TEST_BUF_SIZE (4 * 1024 * 1024)
+	uint8_t *wr_file_buf = (uint8_t *)malloc(TEST_BUF_SIZE);
+	err = sdk_send_file(h, "/tmp/test.txt", wr_file_buf, TEST_BUF_SIZE, 200);
 	if (err != SDK_OK)
-		pr_err("send file failed %s\n", sdk_strerror(err));
+		pr_err("Upload file failed, %s\n", sdk_strerror(err));
+	else
+		pr_info("Upload file successfully\n");
+	free(wr_file_buf);
 
 	/* Download a file frome a path on the device */
-	uint8_t *recv_file_buf = (uint8_t *)malloc(4 * 1024 * 1024);
+	uint8_t *recv_file_buf = (uint8_t *)malloc(TEST_BUF_SIZE);
 	size_t recv_file_len;
-	err = sdk_recv_file(h, "/cmake_install.cmake", &recv_file_buf, &recv_file_len, 500);
+	err = sdk_recv_file(h, "/etc/inittab", &recv_file_buf, &recv_file_len, 500);
+	if (err != SDK_OK)
+		pr_err("Download file failed, %s\n", sdk_strerror(err));
+	else
+		pr_info("Download file successfully, length:%ld\n", recv_file_len);
 	free(recv_file_buf);
-	pr_info("read file length: %ld\n", recv_file_len);
 
 	portDesc.cci_handle = h;
 	portDesc.portType = LEP_CCI_TWI;

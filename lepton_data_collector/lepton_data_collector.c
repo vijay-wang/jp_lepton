@@ -334,7 +334,7 @@ static void mainloop(void)
 		}
 
 		if (0 == r)
-			pr_err("select timeout\n");
+			pr_warn("select timeout\n");
 
 		read_frame();
 	}
