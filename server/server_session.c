@@ -491,13 +491,15 @@ static void *file_thread_fn(void *arg)
 				fdata  = malloc(flen ? (size_t)flen : 1);
 				if (fdata && fd >= 0)
 					(void)read(fd, fdata, (size_t)flen);
-				if (fd >= 0) close(fd);
+
+				if (fd >= 0)
+					close(fd);
 			} else {
-				const char *fake = "FAKE_FILE_CONTENT";
-				flen  = strlen(fake);
-				fdata = malloc(flen);
-				if (fdata)
-					memcpy(fdata, fake, (size_t)flen);
+				sdk_file_encode_read_seq0(1, 0, 0, 0,
+							  rsp_buf, sizeof(rsp_buf),
+							  &rsp_len);
+				sess_send_frame(sess, SDK_FRAME_TYPE_FILE,
+						rsp_buf, rsp_len);
 			}
 
 			if (!fdata) {
@@ -614,9 +616,11 @@ static void *file_thread_fn(void *arg)
 			       wreq.path,
 			       (unsigned long long)wreq.file_len);
 
-			fbuf = malloc(wreq.file_len
-				      ? (size_t)wreq.file_len : 1);
-			if (!fbuf) {
+			if (dir_of_path_exists(wreq.path))
+				fbuf = malloc(wreq.file_len
+					      ? (size_t)wreq.file_len : 1);
+
+			if (!fbuf ) {
 				sdk_file_encode_write_rsp(1, rsp_buf,
 							  sizeof(rsp_buf),
 							  &rsp_len);
@@ -657,6 +661,25 @@ static void *file_thread_fn(void *arg)
 				}
 				free(sf.payload);
 
+				if (seq == (wreq.num_packages - 1)) {
+					uint16_t got = sdk_crc16(fbuf,
+							(size_t)wreq.file_len);
+					if (got == wreq.crc16) {
+						FILE *fp = fopen(wreq.path, "wb");
+						if (fp) {
+							fwrite(fbuf, 1,
+									(size_t)wreq.file_len,
+									fp);
+							fclose(fp);
+							pr_info("[server] Saved %s\n",
+									wreq.path);
+						}
+					} else {
+						pr_err( "[server] write CRC "
+								"mismatch\n");
+					}
+				}
+
 				sdk_file_encode_write_ackn(seq, ack_buf,
 							   sizeof(ack_buf),
 							   &ack_len);
@@ -664,24 +687,6 @@ static void *file_thread_fn(void *arg)
 						ack_buf, ack_len);
 			}
 
-			{
-				uint16_t got = sdk_crc16(fbuf,
-						(size_t)wreq.file_len);
-				if (got == wreq.crc16) {
-					FILE *fp = fopen(wreq.path, "wb");
-					if (fp) {
-						fwrite(fbuf, 1,
-						       (size_t)wreq.file_len,
-						       fp);
-						fclose(fp);
-						pr_info("[server] Saved %s\n",
-						       wreq.path);
-					}
-				} else {
-					pr_err( "[server] write CRC "
-						"mismatch\n");
-				}
-			}
 			free(fbuf);
 		}
 
