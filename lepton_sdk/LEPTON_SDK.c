@@ -109,14 +109,14 @@ LEP_RESULT LEP_GetAttribute(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
 	/* Validate input pointer
 	*/
-	if( attributePtr == NULL )
+	if (attributePtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -127,23 +127,21 @@ LEP_RESULT LEP_GetAttribute(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Perform Command using the active Port
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
-		result = LEP_I2C_GetAttribute( portDescPtr,
+		result = LEP_I2C_GetAttribute(portDescPtr,
 				commandID,
 				attributePtr,
-				attributeWordLength );
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+				attributeWordLength);
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
@@ -163,7 +161,7 @@ LEP_RESULT LEP_SetAttribute(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
@@ -174,22 +172,20 @@ LEP_RESULT LEP_SetAttribute(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Issue Command to the Active Port
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
-		result = LEP_I2C_SetAttribute( portDescPtr,
+		result = LEP_I2C_SetAttribute(portDescPtr,
 				commandID,
 				attributePtr,
-				attributeWordLength );
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+				attributeWordLength);
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
@@ -202,7 +198,7 @@ LEP_RESULT LEP_RunCommand(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
@@ -213,20 +209,18 @@ LEP_RESULT LEP_RunCommand(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Perform Command
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
-		result = LEP_I2C_RunCommand( portDescPtr,
+		result = LEP_I2C_RunCommand(portDescPtr,
 				commandID);
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
@@ -239,22 +233,20 @@ LEP_RESULT LEP_SelectDevice(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
 	/* Select Device
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		result = LEP_I2C_SelectDevice(portDescPtr, device);
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
@@ -297,7 +289,7 @@ LEP_RESULT LEP_OpenPort(LEP_UINT16 portID,
 #ifdef LEP_USE_DYNAMIC_ALLOCATION
 	/* Allocate from the heap
 	*/
-	portDescPtr = (LEP_CAMERA_PORT_DESC_T_PTR)malloc( sizeof(LEP_CAMERA_PORT_DESC_T));
+	portDescPtr = (LEP_CAMERA_PORT_DESC_T_PTR)malloc(sizeof(LEP_CAMERA_PORT_DESC_T));
 #else
 	/* Allocate from static memory
 	*/
@@ -305,15 +297,15 @@ LEP_RESULT LEP_OpenPort(LEP_UINT16 portID,
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr != NULL )
+	if (portDescPtr != NULL)
 	{
 		/* Open Port driver
 		*/
-		switch( portType )
+		switch (portType)
 		{
 			case LEP_CCI_TWI:
 				result = LEP_I2C_OpenPort(portID, &portBaudRate, &deviceAddress);
-				if( result == LEP_OK )
+				if (result == LEP_OK)
 				{
 					portDescPtr->portBaudRate = portBaudRate;
 					portDescPtr->portID = portID;
@@ -323,7 +315,7 @@ LEP_RESULT LEP_OpenPort(LEP_UINT16 portID,
 
 #ifdef LEP_USE_DYNAMIC_ALLOCATION
 				else
-					free( portDescPtr);
+					free(portDescPtr);
 #endif
 
 
@@ -335,8 +327,7 @@ LEP_RESULT LEP_OpenPort(LEP_UINT16 portID,
 			default:
 				break;
 		}
-	}
-	else
+	} else
 		result = LEP_ERROR_CREATING_COMM;
 
 
@@ -349,28 +340,26 @@ LEP_RESULT LEP_ClosePort(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr)
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
 	/* Close Port driver
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		result = LEP_I2C_ClosePort(portDescPtr);
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 
 
 #ifdef LEP_USE_DYNAMIC_ALLOCATION
-	free( portDescPtr );
+	free(portDescPtr);
 #endif
 
 	return(result);
@@ -383,20 +372,18 @@ LEP_RESULT LEP_ResetPort(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr)
 
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
-		LEP_I2C_ResetPort( portDescPtr );
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+		LEP_I2C_ResetPort(portDescPtr);
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
@@ -414,35 +401,33 @@ LEP_RESULT LEP_GetPortStatus(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 LEP_RESULT LEP_DirectReadRegister(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 		LEP_UINT16 registerAddress,
-		LEP_UINT16* regValue)
+		LEP_UINT16 *regValue)
 {
 	LEP_RESULT result = LEP_OK;
 
 
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
 		result = LEP_I2C_DirectReadRegister(portDescPtr, registerAddress, regValue);
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 
 	return(result);
 }
 
 LEP_RESULT LEP_GetDeviceAddress(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
-		LEP_UINT8* deviceAddress)
+		LEP_UINT8 *deviceAddress)
 {
 	LEP_RESULT result = LEP_OK;
 
-	if(portDescPtr->portType == LEP_CCI_TWI)
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		result = LEP_I2C_GetDeviceAddress(portDescPtr, deviceAddress);
 	}
@@ -458,27 +443,25 @@ LEP_RESULT LEP_DirectWriteRegister(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	LEP_RESULT result = LEP_OK;
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
 	/* Issue Command to the Active Port
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
 		result = LEP_I2C_DirectWriteRegister(portDescPtr, registerAddress, regValue);
 
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 	return(result);
 }
@@ -490,28 +473,26 @@ LEP_RESULT LEP_DirectWriteBuffer(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	LEP_RESULT result;
 	/* Validate the port descriptor
 	*/
-	if( portDescPtr == NULL )
+	if (portDescPtr == NULL)
 	{
 		return(LEP_COMM_PORT_NOT_OPEN);
 	}
 
 	/* Issue Command to the Active Port
 	*/
-	if( portDescPtr->portType == LEP_CCI_TWI )
+	if (portDescPtr->portType == LEP_CCI_TWI)
 	{
 		/* Use the Lepton TWI/CCI Port
 		*/
 		result = LEP_I2C_DirectWriteBuffer(portDescPtr,
 				attributePtr,
-				attributeWordLength );
-	}
-	else if( portDescPtr->portType == LEP_CCI_SPI )
+				attributeWordLength);
+	} else if( portDescPtr->portType == LEP_CCI_SPI )
 	{
 		/* Use the Lepton SPI Port
 		*/
 
-	}
-	else
+	} else
 		result = LEP_COMM_INVALID_PORT_ERROR;
 	return(result);
 }
@@ -521,7 +502,7 @@ LEP_RESULT LEP_GetSDKVersion(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 {
 	LEP_RESULT result = LEP_OK;
 
-	if(sdkVersionPtr == NULL)
+	if (sdkVersionPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -540,11 +521,10 @@ LEP_RESULT LEP_GetCameraBootStatus(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	result = LEP_DirectReadRegister(portDescPtr, 0x2, &regValue);
 
-	if(result == LEP_OK && regValue & 4)
+	if (result == LEP_OK && regValue & 4)
 	{
 		*bootStatusPtr = LEP_BOOT_STATUS_BOOTED;
-	}
-	else
+	} else
 	{
 		*bootStatusPtr = LEP_BOOT_STATUS_NOT_BOOTED;
 	}
@@ -559,13 +539,14 @@ LEP_RESULT LEP_GetCameraBootStatus(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 LEP_RESULT _LEP_DelayCounts(LEP_UINT32 counts)
 {
 	LEP_UINT32 a;
-	while( counts-- )
+
+	while (counts--)
 	{
-		a=counts;
+		a = counts;
 	}
-	if( a )
+	if (a)
 	{
-		return(LEP_TIMEOUT_ERROR) ;
+		return(LEP_TIMEOUT_ERROR);
 	}
 	return(LEP_OK);
 }

@@ -71,6 +71,7 @@ static void rxbuf_consume(struct rx_buf *b, size_t n)
 	b->head += n;
 	if (b->head > RX_BUF_CAP / 2) {
 		size_t used = b->tail - b->head;
+
 		memmove(b->data, b->data + b->head, used);
 		b->head = 0;
 		b->tail = used;
@@ -146,6 +147,7 @@ static void fq_init(struct frame_queue *q)
 static void fq_destroy(struct frame_queue *q)
 {
 	int i;
+
 	pthread_mutex_lock(&q->lock);
 	for (i = 0; i < FRAME_QUEUE_DEPTH; i++)
 		free(q->slots[i].payload);
@@ -369,6 +371,7 @@ static void *cmd_thread_fn(void *arg)
 		struct queued_frame qf;
 		uint8_t flag;
 		sdk_cmd_request_t request;
+
 		r = fq_pop(&sess->cmd_queue, &qf, -1);
 		uint8_t *ack;
 		size_t ack_cap;
@@ -433,11 +436,13 @@ static int dir_of_path_exists(char *path)
 
 	/*dirname() may modify the string, work on a copy */
 	char buf[strlen(path) + 1];
+
 	strcpy(buf, path);
 
 	char *dir = dirname(buf);
 
 	struct stat st;
+
 	if (stat(dir, &st) != 0)
 		return 0;
 
@@ -487,6 +492,7 @@ static void *file_thread_fn(void *arg)
 
 			if (stat(req.path, &st) == 0 && S_ISREG(st.st_mode)) {
 				int fd = open(req.path, O_RDONLY);
+
 				flen   = (uint64_t)st.st_size;
 				fdata  = malloc(flen ? (size_t)flen : 1);
 				if (fdata && fd >= 0)
@@ -511,7 +517,8 @@ static void *file_thread_fn(void *arg)
 			num_pkg = (uint32_t)(
 				(flen + SDK_FILE_CHUNK_SIZE - 1)
 				/ SDK_FILE_CHUNK_SIZE);
-			if (!num_pkg) num_pkg = 1;
+			if (!num_pkg)
+				num_pkg = 1;
 
 			sdk_file_encode_read_seq0(0, flen, fcrc, num_pkg,
 						  rsp_buf, sizeof(rsp_buf),
@@ -522,6 +529,7 @@ static void *file_thread_fn(void *arg)
 			/* Wait for ACK0 */
 			{
 				struct queued_frame ack0f;
+
 				if (fq_pop(&sess->file_queue, &ack0f,
 					   SDK_FILE_TIMEOUT_MS) != 0) {
 					free(fdata);
@@ -587,8 +595,7 @@ static void *file_thread_fn(void *arg)
 					}
 
 					if (retry == SDK_FILE_MAX_RETRY) {
-						pr_err("[server] read: ack "
-							"timeout seq %u\n",
+						pr_err("[server] read: ack timeout seq %u\n",
 							seq);
 						break;
 					}
@@ -620,7 +627,7 @@ static void *file_thread_fn(void *arg)
 				fbuf = malloc(wreq.file_len
 					      ? (size_t)wreq.file_len : 1);
 
-			if (!fbuf ) {
+			if (!fbuf) {
 				sdk_file_encode_write_rsp(1, rsp_buf,
 							  sizeof(rsp_buf),
 							  &rsp_len);
@@ -644,8 +651,7 @@ static void *file_thread_fn(void *arg)
 
 				if (fq_pop(&sess->file_queue, &sf,
 					   SDK_FILE_TIMEOUT_MS) != 0) {
-					pr_err( "[server] write: seqN "
-						"timeout\n");
+					pr_err( "[server] write: seqN timeout\n");
 					break;
 				}
 
@@ -666,6 +672,7 @@ static void *file_thread_fn(void *arg)
 							(size_t)wreq.file_len);
 					if (got == wreq.crc16) {
 						FILE *fp = fopen(wreq.path, "wb");
+
 						if (fp) {
 							fwrite(fbuf, 1,
 									(size_t)wreq.file_len,
@@ -675,8 +682,7 @@ static void *file_thread_fn(void *arg)
 									wreq.path);
 						}
 					} else {
-						pr_err( "[server] write CRC "
-								"mismatch\n");
+						pr_err( "[server] write CRC mismatch\n");
 					}
 				}
 
@@ -739,6 +745,7 @@ static void *rx_thread_fn(void *arg)
 
 			if (ptr[0] != 0x55 || ptr[1] != 0xAA) {
 				size_t i;
+
 				for (i = 1; i < avail - 1; i++) {
 					if (ptr[i] == 0x55 &&
 					    ptr[i+1] == 0xAA) {
@@ -818,7 +825,7 @@ server_session_create(net_socket_t *sock)
 	fq_init(&sess->file_queue);
 	pthread_mutex_init(&sess->send_lock, NULL);
 	pthread_mutex_init(&sess->done_lock, NULL);
-	pthread_cond_init (&sess->done_cond, NULL);
+	pthread_cond_init(&sess->done_cond, NULL);
 
 	if (pthread_create(&sess->rx_thread,   NULL, rx_thread_fn,   sess) ||
 	    pthread_create(&sess->img_thread,  NULL, img_thread_fn,  sess) ||
@@ -853,7 +860,7 @@ void server_session_destroy(server_session_t *sess)
 	fq_destroy(&sess->file_queue);
 	pthread_mutex_destroy(&sess->send_lock);
 	pthread_mutex_destroy(&sess->done_lock);
-	pthread_cond_destroy (&sess->done_cond);
+	pthread_cond_destroy(&sess->done_cond);
 
 	free(sess);
 }

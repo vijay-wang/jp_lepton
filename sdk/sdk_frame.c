@@ -82,6 +82,7 @@ uint64_t sdk_timestamp_us(void)
 #ifdef _WIN32
 	FILETIME ft;
 	ULARGE_INTEGER ui;
+
 	GetSystemTimeAsFileTime(&ft);
 	ui.LowPart  = ft.dwLowDateTime;
 	ui.HighPart = ft.dwHighDateTime;
@@ -90,6 +91,7 @@ uint64_t sdk_timestamp_us(void)
 	return (ui.QuadPart - UINT64_C(116444736000000000)) / 10;
 #else
 	struct timespec ts;
+
 	clock_gettime(CLOCK_REALTIME, &ts);
 	return (uint64_t)ts.tv_sec * 1000000ULL + (uint64_t)ts.tv_nsec / 1000ULL;
 #endif
@@ -108,6 +110,7 @@ static void put_u16(uint8_t *p, uint16_t v)
 static void put_u64(uint8_t *p, uint64_t v)
 {
 	uint64_t n = sdk_hton64(v);
+
 	memcpy(p, &n, 8);
 }
 
@@ -119,6 +122,7 @@ static uint16_t get_u16(const uint8_t *p)
 static uint64_t get_u64(const uint8_t *p)
 {
 	uint64_t n;
+
 	memcpy(&n, p, 8);
 	return sdk_ntoh64(n);
 }

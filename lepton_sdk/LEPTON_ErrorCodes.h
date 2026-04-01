@@ -83,8 +83,7 @@ extern "C"
 	/*
 	 * Represents the different result codes the camera can return.
 	 */
-	typedef enum Result
-	{
+	typedef enum Result {
 		LEP_OK                            = 0,     /* Camera ok */
 		LEP_COMM_OK                       = LEP_OK, /* Camera comm ok (same as LEP_OK) */
 

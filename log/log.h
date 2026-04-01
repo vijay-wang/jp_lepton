@@ -186,7 +186,7 @@ static inline int log_get_level(void)
 	 (lvl) == LOG_WARNING ? "WARN "   :	\
 	 (lvl) == LOG_NOTICE  ? "NOTICE"  :	\
 	 (lvl) == LOG_INFO    ? "INFO "   :	\
-	 "DEBUG"   )
+	 "DEBUG")
 
 /*
  * __log_timestamp - write an ISO-8601-style wall-clock prefix
@@ -342,7 +342,7 @@ static inline const char *__log_timestamp(void)
 */
 #define pr_cont(fmt, ...)	\
 	do {	\
-		if (LOG_INFO <= log_get_level())	\
+		if (log_get_level() >= LOG_INFO)	\
 		fprintf(stdout, fmt, ##__VA_ARGS__);	\
 	} while (0)
 

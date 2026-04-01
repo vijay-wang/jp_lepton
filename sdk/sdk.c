@@ -45,7 +45,8 @@ typedef struct rx_buf {
 static int rxbuf_init(rx_buf_t *b)
 {
 	b->data = (uint8_t *)malloc(RX_BUF_SIZE);
-	if (!b->data) return -1;
+	if (!b->data)
+		return -1;
 	b->head = 0;
 	b->tail = 0;
 	b->cap  = RX_BUF_SIZE;
@@ -77,6 +78,7 @@ static void rxbuf_consume(rx_buf_t *b, size_t n)
 	/* Compact once head passes halfway to avoid realloc */
 	if (b->head > b->cap / 2) {
 		size_t used = b->tail - b->head;
+
 		memmove(b->data, b->data + b->head, used);
 		b->head = 0;
 		b->tail = used;
@@ -197,6 +199,7 @@ int sdk_pending_wait(sdk_pending_req_t *r, int timeout_ms,
 	EnterCriticalSection(&r->lock);
 	while (r->state == SDK_PENDING_WAIT) {
 		DWORD ms = (timeout_ms < 0) ? INFINITE : (DWORD)timeout_ms;
+
 		if (!SleepConditionVariableCS(&r->cond, &r->lock, ms)) {
 			ret = -1;
 			break;
@@ -209,6 +212,7 @@ int sdk_pending_wait(sdk_pending_req_t *r, int timeout_ms,
 			pthread_cond_wait(&r->cond, &r->lock);
 	} else {
 		struct timespec ts;
+
 		clock_gettime(CLOCK_REALTIME, &ts);
 		ts.tv_sec  += timeout_ms / 1000;
 		ts.tv_nsec += (long)(timeout_ms % 1000) * 1000000L;
@@ -290,6 +294,7 @@ static void rx_dispatch(sdk_handle_t *h, const sdk_frame_t *frame)
 	case SDK_FRAME_TYPE_FILE: {
 		/* Copy payload for the pending waiter */
 		uint8_t *copy = (uint8_t *)malloc((size_t)frame->length);
+
 		if (!copy) {
 			sdk_pending_post_err(&h->pending);
 			break;
@@ -354,9 +359,11 @@ static void *sdk_rx_thread(void *arg)
 
 			/* Check for correct header first */
 			const uint8_t *ptr = rxbuf_ptr(&rbuf);
+
 			if (ptr[0] != 0x55 || ptr[1] != 0xAA) {
 				/* Scan for next 0x55AA to resync */
 				size_t i;
+
 				for (i = 1; i < avail - 1; i++) {
 					if (ptr[i] == 0x55 && ptr[i+1] == 0xAA) {
 						rxbuf_consume(&rbuf, i);
@@ -401,10 +408,12 @@ sdk_handle_t *sdk_create(const sdk_config_t *cfg)
 	sdk_config_t   def = (sdk_config_t)SDK_CONFIG_DEFAULT;
 	sdk_handle_t  *h;
 
-	if (!cfg) cfg = &def;
+	if (!cfg)
+		cfg = &def;
 
 	h = (sdk_handle_t *)calloc(1, sizeof(*h));
-	if (!h) return NULL;
+	if (!h)
+		return NULL;
 
 	h->cfg      = *cfg;
 	h->connected = 0;
@@ -436,7 +445,8 @@ sdk_handle_t *sdk_create(const sdk_config_t *cfg)
 
 void sdk_destroy(sdk_handle_t *h)
 {
-	if (!h) return;
+	if (!h)
+		return;
 	sdk_disconnect(h);
 	sdk_image_module_destroy(h->image_mod);
 	sdk_pending_destroy(&h->pending);
@@ -454,10 +464,12 @@ sdk_err_t sdk_connect(sdk_handle_t *h, const char *ip, uint16_t port)
 	net_addr_t addr;
 	net_err_t  err;
 
-	if (!h || !ip) return SDK_ERR_PARAM;
+	if (!h || !ip)
+		return SDK_ERR_PARAM;
 
 	h->sock = net_socket_create();
-	if (!h->sock) return SDK_ERR_NET;
+	if (!h->sock)
+		return SDK_ERR_NET;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.port = port;
@@ -495,7 +507,8 @@ sdk_err_t sdk_connect(sdk_handle_t *h, const char *ip, uint16_t port)
 
 void sdk_disconnect(sdk_handle_t *h)
 {
-	if (!h || !h->connected) return;
+	if (!h || !h->connected)
+		return;
 
 	h->rx_running = 0;
 	net_socket_destroy(h->sock);
@@ -520,7 +533,8 @@ void sdk_disconnect(sdk_handle_t *h)
 
 sdk_image_buf_t *sdk_recv_image(sdk_handle_t *h, int timeout_ms)
 {
-	if (!h || !h->connected) return NULL;
+	if (!h || !h->connected)
+		return NULL;
 	return sdk_image_dequeue(h->image_mod, timeout_ms);
 }
 
@@ -536,7 +550,8 @@ void sdk_release_image(sdk_handle_t *h, sdk_image_buf_t *img)
 
 void sdk_cmd_result_free(sdk_cmd_result_t *r)
 {
-	if (!r) return;
+	if (!r)
+		return;
 	free(r->data);
 	r->data     = NULL;
 	r->data_len = 0;
@@ -552,7 +567,8 @@ sdk_err_t sdk_send_cmd(sdk_handle_t *h, uint8_t flag, const uint8_t *data,
 	sdk_cmd_ack_t ack;
 	int tms;
 
-	if (!h || !h->connected || !result) return SDK_ERR_PARAM;
+	if (!h || !h->connected || !result)
+		return SDK_ERR_PARAM;
 
 	tms = timeout_ms > 0 ? timeout_ms : h->cfg.cmd_timeout_ms;
 
@@ -618,7 +634,8 @@ sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
 	tms      = timeout_ms > 0 ? timeout_ms : h->cfg.file_timeout_ms;
 	crc16    = sdk_crc16(data, data_len);
 	num_pkg  = (uint32_t)((data_len + SDK_FILE_CHUNK_SIZE - 1) / SDK_FILE_CHUNK_SIZE);
-	if (num_pkg == 0) num_pkg = 1;
+	if (num_pkg == 0)
+		num_pkg = 1;
 
 	/* ---- WRITE_REQ ---- */
 	if (sdk_file_encode_write_req(remote_path, (uint64_t)data_len,
@@ -636,6 +653,7 @@ sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
 
 	{
 		sdk_file_write_rsp_t wrsp;
+
 		if (sdk_file_decode_write_rsp(rsp, rsp_len, &wrsp) != 0 ||
 				wrsp.ret_code != 0) {
 			free(rsp);
@@ -653,7 +671,9 @@ sdk_err_t sdk_send_file(sdk_handle_t *h, const char *remote_path,
 	for (seq = 0; seq < num_pkg; seq++) {
 		size_t offset     = (size_t)seq * SDK_FILE_CHUNK_SIZE;
 		size_t chunk_size = data_len - offset;
-		if (chunk_size > SDK_FILE_CHUNK_SIZE) chunk_size = SDK_FILE_CHUNK_SIZE;
+
+		if (chunk_size > SDK_FILE_CHUNK_SIZE)
+			chunk_size = SDK_FILE_CHUNK_SIZE;
 
 		for (retry = 0; retry < SDK_FILE_MAX_RETRY; retry++) {
 			sdk_file_write_ackn_t wack;
@@ -734,6 +754,7 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
 
 	{
 		sdk_file_read_seq0_t seq0;
+
 		if (sdk_file_decode_read_seq0(rsp, rsp_len, &seq0) != 0 ||
 				seq0.ret_code != 0) {
 			free(rsp);
@@ -747,11 +768,13 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
 	free(rsp); rsp = NULL;
 
 	file_buf = (uint8_t *)malloc((size_t)file_total ? (size_t)file_total : 1);
-	if (!file_buf) return SDK_ERR_NOMEM;
+	if (!file_buf)
+		return SDK_ERR_NOMEM;
 
 	/* ---- Send ACK0 ---- */
 	{
 		uint8_t ack0[1 + SDK_FILE_RESERVED_SIZE + 4];
+
 		if (sdk_file_encode_read_ack0(0, ack0, sizeof(ack0), &enc_len) != 0 ||
 				sdk_send_frame(h, SDK_FRAME_TYPE_FILE, ack0, enc_len) != 0) {
 			result = SDK_ERR_NET;
@@ -774,6 +797,7 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
 
 		{
 			sdk_file_read_seqn_t seqn;
+
 			if (sdk_file_decode_read_seqn(rsp, rsp_len, &seqn) != 0 ||
 					seqn.ret_code != 0) {
 				free(rsp); rsp = NULL;
@@ -802,6 +826,7 @@ sdk_err_t sdk_recv_file(sdk_handle_t *h, const char *remote_path,
 	/* CRC verify */
 	{
 		uint16_t got_crc = sdk_crc16(file_buf, (size_t)file_total);
+
 		if (got_crc != expected_crc) {
 			pr_err("[sdk] recv_file: CRC mismatch\n");
 			result = SDK_ERR_PROTO;

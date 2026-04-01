@@ -107,7 +107,7 @@ int server_run(server_handle_t *srv)
 	}
 
 	pr_info("[server] Listening on %s:%u\n",
-	       srv->cfg.bind_ip, (unsigned)srv->cfg.port);
+	       srv->cfg.bind_ip, (unsigned int)srv->cfg.port);
 
 	while (!atomic_load(&srv->stop)) {
 		net_addr_t         peer;
@@ -122,7 +122,7 @@ int server_run(server_handle_t *srv)
 		}
 
 		pr_info("[server] Client connected: %s:%u\n",
-		       peer.ip_str, (unsigned)peer.port);
+		       peer.ip_str, (unsigned int)peer.port);
 
 		sess = server_session_create(client);
 		if (!sess) {
@@ -136,7 +136,7 @@ int server_run(server_handle_t *srv)
 		server_session_destroy(sess);
 
 		pr_info("[server] Client %s:%u disconnected\n",
-		       peer.ip_str, (unsigned)peer.port);
+		       peer.ip_str, (unsigned int)peer.port);
 	}
 
 	return 0;

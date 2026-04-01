@@ -171,7 +171,7 @@ enum {
 // Events
 //
 
-typedef void (*PFT_EVENT_HANDLER)(DWORD,DWORD);
+typedef void (*PFT_EVENT_HANDLER)(DWORD, DWORD);
 
 #define FT_EVENT_RXCHAR			1
 #define FT_EVENT_MODEM_STATUS	2
@@ -259,17 +259,17 @@ extern "C" {
 	FTD2XX_API
 		FT_STATUS WINAPI FT_Open(
 		int deviceNumber,
-		FT_HANDLE *pHandle
+		FT_HANDLE * pHandle
 		);
 
 	FTD2XX_API
 		FT_STATUS WINAPI FT_OpenEx(
 		PVOID pArg1,
 		DWORD Flags,
-		FT_HANDLE *pHandle
+		FT_HANDLE * pHandle
 		);
 
-	FTD2XX_API 
+	FTD2XX_API
 		FT_STATUS WINAPI FT_ListDevices(
 		PVOID pArg1,
 		PVOID pArg2,
@@ -289,7 +289,7 @@ extern "C" {
 		LPDWORD lpBytesReturned
 		);
 
-	FTD2XX_API 
+	FTD2XX_API
 		FT_STATUS WINAPI FT_Write(
 		FT_HANDLE ftHandle,
 		LPVOID lpBuffer,
@@ -297,7 +297,7 @@ extern "C" {
 		LPDWORD lpBytesWritten
 		);
 
-	FTD2XX_API 
+	FTD2XX_API
 		FT_STATUS WINAPI FT_IoCtl(
 		FT_HANDLE ftHandle,
 		DWORD dwIoControlCode,
@@ -365,7 +365,7 @@ extern "C" {
 	FTD2XX_API
 		FT_STATUS WINAPI FT_GetModemStatus(
 		FT_HANDLE ftHandle,
-		ULONG *pModemStatus
+		ULONG * pModemStatus
 		);
 
 	FTD2XX_API
@@ -463,7 +463,7 @@ extern "C" {
 	//
 	typedef struct ft_program_data {
 
-		DWORD Signature1;			// Header - must be 0x00000000 
+		DWORD Signature1;			// Header - must be 0x00000000
 		DWORD Signature2;			// Header - must be 0xffffffff
 		DWORD Version;				// Header - FT_PROGRAM_DATA version
 		//			0 = original
@@ -618,7 +618,7 @@ extern "C" {
 		UCHAR FT1248FlowControlH;	// FT1248 flow control enable
 		UCHAR IsVCPH;				// non-zero if interface is to use VCP drivers
 		UCHAR PowerSaveEnableH;		// non-zero if using ACBUS7 to save power for self-powered designs
-		
+
 	} FT_PROGRAM_DATA, *PFT_PROGRAM_DATA;
 
 	FTD2XX_API
@@ -715,7 +715,7 @@ extern "C" {
 	FTD2XX_API
 		FT_STATUS WINAPI FT_GetDeviceInfo(
 		FT_HANDLE ftHandle,
-		FT_DEVICE *lpftDevice,
+		FT_DEVICE * lpftDevice,
 		LPDWORD lpdwID,
 		PCHAR SerialNumber,
 		PCHAR Description,
@@ -859,7 +859,7 @@ extern "C" {
 		DWORD ReadTotalTimeoutConstant;		/* Constant in milliseconds.		*/
 		DWORD WriteTotalTimeoutMultiplier;	/* Multiplier of characters.		*/
 		DWORD WriteTotalTimeoutConstant;	/* Constant in milliseconds.		*/
-	} FTTIMEOUTS,*LPFTTIMEOUTS;
+	} FTTIMEOUTS, *LPFTTIMEOUTS;
 
 
 	FTD2XX_API
@@ -895,7 +895,7 @@ extern "C" {
 	FTD2XX_API
 		BOOL WINAPI FT_W32_GetCommTimeouts(
 		FT_HANDLE ftHandle,
-		FTTIMEOUTS *pTimeouts
+		FTTIMEOUTS * pTimeouts
 		);
 
 	FTD2XX_API
@@ -930,7 +930,7 @@ extern "C" {
 	FTD2XX_API
 		BOOL WINAPI FT_W32_SetCommTimeouts(
 		FT_HANDLE ftHandle,
-		FTTIMEOUTS *pTimeouts
+		FTTIMEOUTS * pTimeouts
 		);
 
 	FTD2XX_API
@@ -976,7 +976,7 @@ extern "C" {
 
 	FTD2XX_API
 		FT_STATUS WINAPI FT_GetDeviceInfoList(
-		FT_DEVICE_LIST_INFO_NODE *pDest,
+		FT_DEVICE_LIST_INFO_NODE * pDest,
 		LPDWORD lpdwNumDevs
 		);
 

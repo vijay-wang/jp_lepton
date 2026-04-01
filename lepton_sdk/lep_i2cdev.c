@@ -31,13 +31,13 @@ int debug_level = DEBUG;
 #define DEBUG_DUMP(level, dptr, dformatwidth, dcount, per_line) { \
 	if (level <= debug_level) { \
 		int __debug_dump_i = 0, __debug_dump_j = 0; \
-		while(__debug_dump_i<dcount) { \
-			for (__debug_dump_j=0; __debug_dump_j<per_line; __debug_dump_j++) { \
+		while (__debug_dump_i < dcount) { \
+			for (__debug_dump_j = 0; __debug_dump_j < per_line; __debug_dump_j++) { \
 				if ((__debug_dump_i + __debug_dump_j) >= dcount) \
 				break; \
 				pr_err("%0*x ", dformatwidth, dptr[__debug_dump_i+__debug_dump_j]); } \
 			pr_err("\n"); \
-			__debug_dump_i+=per_line; } \
+			__debug_dump_i += per_line; } \
 		pr_err("\n"); } }
 
 #else
@@ -54,9 +54,8 @@ int debug_level = DEBUG;
 int lepton_i2c_fd = -1;
 
 // Fixed to I2C2
-int i2cdev_init()
+int i2cdev_init(void)
 {
-	DEBUG_PRINT(5, "%s() called.\n", __func__);
 	if (lepton_i2c_fd >= 0)
 	{
 		close(lepton_i2c_fd);
@@ -67,8 +66,7 @@ int i2cdev_init()
 	{
 		DEBUG_PRINT(1, "Failed I2C open(): %s\n", strerror(errno));
 		return -1;
-	}
-	else
+	} else
 	{
 		if (ioctl(lepton_i2c_fd, I2C_SLAVE, LEP_I2C_DEVICE_ADDRESS) < 0)
 		{
@@ -80,9 +78,8 @@ int i2cdev_init()
 	return 0;
 }
 
-void i2cdev_close()
+void i2cdev_close(void)
 {
-	DEBUG_PRINT(5, "%s() called.\n", __func__);
 	if (lepton_i2c_fd >= 0)
 	{
 		close(lepton_i2c_fd);
@@ -98,6 +95,7 @@ int i2cdev_read_byte_data(LEP_UINT8 *rx_adr, LEP_UINT8 *rx_data, LEP_UINT32 rx_s
 	DEBUG_PRINT(5, "%s(rx_adr=%p, rx_data=%p, rx_size=%d) called.\n", __func__, rx_adr, rx_data, rx_size);
 	DEBUG_PRINT(4, "Writing big-endian address 0x%02x%02x\n", rx_adr[0], rx_adr[1]);
 	int write_data = write(lepton_i2c_fd, rx_adr, ADDRESS_WIDTH);
+
 	if (write_data < 0)
 	{
 		DEBUG_PRINT(1, "Failed I2C write(%d, 0x%02x%02x, %d): %s\n", lepton_i2c_fd, rx_adr[0], rx_adr[1], ADDRESS_WIDTH,

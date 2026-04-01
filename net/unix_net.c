@@ -94,7 +94,7 @@ void unix_net_cleanup(void)
  * Socket creation / destruction
  * -------------------------------------------------------------------- */
 
-net_socket_t * unix_net_socket_create(void)
+net_socket_t *unix_net_socket_create(void)
 {
 	net_socket_t *sock;
 
@@ -174,7 +174,7 @@ net_err_t unix_net_server_listen(net_socket_t *sock, int backlog)
 	return NET_OK;
 }
 
-net_socket_t * unix_net_server_accept(net_socket_t *sock, net_addr_t *peer_addr)
+net_socket_t *unix_net_server_accept(net_socket_t *sock, net_addr_t *peer_addr)
 {
 	struct sockaddr_storage peer_ss;
 	socklen_t peer_len = sizeof(peer_ss);

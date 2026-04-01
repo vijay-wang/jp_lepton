@@ -127,7 +127,7 @@ LEP_RESULT LEP_I2C_MasterOpen(LEP_UINT16 portID,
 	/* Call the I2C Device-Specific Driver to open device as a
 	 ** Master
 	 */
-	result = DEV_I2C_MasterInit( portID, portBaudRate );
+	result = DEV_I2C_MasterInit(portID, portBaudRate);
 
 	return(result);
 }
@@ -146,7 +146,7 @@ LEP_RESULT LEP_I2C_MasterClose(LEP_CAMERA_PORT_DESC_T_PTR portDescriptorPtr)
 
 /* Driver Reset
 */
-LEP_RESULT LEP_I2C_MasterReset(LEP_CAMERA_PORT_DESC_T_PTR portDescriptorPtr )
+LEP_RESULT LEP_I2C_MasterReset(LEP_CAMERA_PORT_DESC_T_PTR portDescriptorPtr)
 {
 	LEP_RESULT result = LEP_OK;
 
@@ -266,7 +266,7 @@ LEP_RESULT LEP_I2C_MasterWriteRegister(LEP_UINT16 portID,
 /* Driver Status
 */
 LEP_RESULT LEP_I2C_MasterStatus(LEP_UINT16 portID,
-		LEP_UINT16 *portStatus )
+		LEP_UINT16 *portStatus)
 {
 	LEP_RESULT result = LEP_OK;
 

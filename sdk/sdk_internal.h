@@ -81,7 +81,7 @@ struct sdk_handle {
  * Internal helpers
  * ---------------------------------------------------------------------- */
 
-void sdk_pending_init  (sdk_pending_req_t *r);
+void sdk_pending_init(sdk_pending_req_t *r);
 void sdk_pending_destroy(sdk_pending_req_t *r);
 
 /* Post a response to the pending slot and wake the waiter.

@@ -76,7 +76,7 @@ extern "C"
 #include "avr_compiler.h"
 #endif
 
-#if defined(_WIN32) || defined (_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #define WINDOWSS 1;
 #else
@@ -164,55 +164,49 @@ extern "C"
 
 
 	typedef LEP_UINT16          LEP_COMMAND_ID;
-	typedef LEP_UINT16          LEP_ATTRIBUTE_T,*LEP_ATTRIBUTE_T_PTR;
+	typedef LEP_UINT16          LEP_ATTRIBUTE_T, *LEP_ATTRIBUTE_T_PTR;
 
 #define LEP_GET_TYPE        0x0000
 #define LEP_SET_TYPE        0x0001
 #define LEP_RUN_TYPE        0x0002
 
-	typedef enum
-	{
-		LEP_LSB_FIRST=0,
+	typedef enum {
+		LEP_LSB_FIRST = 0,
 		LEP_MSB_FIRST
 
-	}LEP_BYTE_ORDER_T, *LEP_BYTE_ORDER_T_PTR;
+	} LEP_BYTE_ORDER_T, *LEP_BYTE_ORDER_T_PTR;
 
-	typedef enum
-	{
+	typedef enum {
 		LEP_READY = 0,
 		LEP_BUSY,
 		LEP_WAITING
 
-	}LEP_OPERATION_STATE;
+	} LEP_OPERATION_STATE;
 
-	typedef enum
-	{
+	typedef enum {
 		LEP_DISABLED = 0,
 		LEP_ENABLED
 
-	}LEP_ENABLE_STATE;
+	} LEP_ENABLE_STATE;
 
-	typedef enum
-	{
+	typedef enum {
 		LEP_OFF = 0,
 		LEP_ON
 
-	}LEP_ON_STATE;
+	} LEP_ON_STATE;
 
 
 	/* Lepton physical tranport interfaces
 	*/
-	typedef enum LEP_CAMERA_PORT_E_TAG
-	{
-		LEP_CCI_TWI=0,
+	typedef enum LEP_CAMERA_PORT_E_TAG {
+		LEP_CCI_TWI = 0,
 		LEP_CCI_SPI,
 		LEP_END_CCI_PORTS
-	}LEP_CAMERA_PORT_E, *LEP_CAMERA_PORT_E_PTR;
+	} LEP_CAMERA_PORT_E, *LEP_CAMERA_PORT_E_PTR;
 
 	/* Device entries
 	*/
-	typedef enum LEP_PROTOCOL_DEVICE_E_TAG
-	{
+	typedef enum LEP_PROTOCOL_DEVICE_E_TAG {
 		/* I2C Devices */
 		AARDVARK_I2C = 0,
 		DEV_BOARD_FTDI_V2,
@@ -228,36 +222,33 @@ extern "C"
 
 	/* Lepton supported TWI  clock rates
 	*/
-	typedef enum LEP_TWI_CLOCK_RATE_T_TAG
-	{
-		LEP_TWI_CLOCK_100KHZ=0,
+	typedef enum LEP_TWI_CLOCK_RATE_T_TAG {
+		LEP_TWI_CLOCK_100KHZ = 0,
 		LEP_TWI_CLOCK_400KHZ,
 		LEP_TWI_CLOCK_1MHZ,
 		LEP_END_TWI_CLOCK_RATE
 
-	}LEP_TWI_CLOCK_RATE_T, *LEP_TWI_CLOCK_RATE_T_PTR;
+	} LEP_TWI_CLOCK_RATE_T, *LEP_TWI_CLOCK_RATE_T_PTR;
 
 	/* Lepton supported SPI  clock rates
 	*/
-	typedef enum LEP_SPI_CLOCK_RATE_T_TAG
-	{
-		LEP_SPI_CLOCK_2MHZ=0,
+	typedef enum LEP_SPI_CLOCK_RATE_T_TAG {
+		LEP_SPI_CLOCK_2MHZ = 0,
 		LEP_SPI_CLOCK_10MHZ,
 		LEP_SPI_CLOCK_20MHZ,
 		LEP_END_SPI_CLOCK_RATE
 
-	}LEP_SPI_CLOCK_RATE_T, *LEP_SPI_CLOCK_RATE_T_PTR;
+	} LEP_SPI_CLOCK_RATE_T, *LEP_SPI_CLOCK_RATE_T_PTR;
 
 	/* Communications Port Descriptor Type
 	*/
-	typedef struct  LEP_CAMERA_PORT_DESC_T_TAG
-	{
+	typedef struct  LEP_CAMERA_PORT_DESC_T_TAG {
 		LEP_UINT16  portID;
 		LEP_CAMERA_PORT_E   portType;
 		LEP_UINT16  portBaudRate;
 		LEP_UINT8 deviceAddress;
 		void *cci_handle;
-	}LEP_CAMERA_PORT_DESC_T, *LEP_CAMERA_PORT_DESC_T_PTR;
+	} LEP_CAMERA_PORT_DESC_T, *LEP_CAMERA_PORT_DESC_T_PTR;
 
 
 	/******************************************************************************/

@@ -13,7 +13,8 @@
 
 static const char *g_ip;
 static uint16_t    g_port;
-void print_beijing_time(long long timestamp_us) {
+void print_beijing_time(long long timestamp_us)
+{
 	time_t seconds = timestamp_us / 1000000;
 	int microseconds = timestamp_us % 1000000;
 
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
 	LEP_CAMERA_PORT_DESC_T portDesc;
 	LEP_SDK_VERSION_T version;
 	LEP_OEM_GPIO_MODE_E gpio_mode;
+	uint64_t elapsed;
 
 	sdk_handle_t *h;
 	sdk_err_t     err;
@@ -62,6 +64,7 @@ int main(int argc, char *argv[])
 	/* Upload a local buffer to a path on the device */
 #define TEST_BUF_SIZE (4 * 1024 * 1024)
 	uint8_t *wr_file_buf = (uint8_t *)malloc(TEST_BUF_SIZE);
+
 	err = sdk_send_file(h, "/tmp/test.txt", wr_file_buf, TEST_BUF_SIZE, 300);
 	if (err != SDK_OK)
 		pr_err("Upload file failed, %s\n", sdk_strerror(err));
@@ -72,6 +75,7 @@ int main(int argc, char *argv[])
 	/* Download a file frome a path on the device */
 	uint8_t *recv_file_buf = (uint8_t *)malloc(TEST_BUF_SIZE);
 	size_t recv_file_len;
+
 	err = sdk_recv_file(h, "/etc/inittab", &recv_file_buf, &recv_file_len, 200);
 	if (err != SDK_OK)
 		pr_err("Download file failed, %s\n", sdk_strerror(err));
@@ -83,13 +87,13 @@ int main(int argc, char *argv[])
 	portDesc.portType = LEP_CCI_TWI;
 	result = LEP_SelectDevice(&portDesc, MAC_COM);
 	if (result != LEP_OK) {
-		pr_err("LEP_SelectDevice failed");
+		pr_err("LEP_SelectDevice failed\n");
 		goto select_dev_failed;
 	}
 
 	result = LEP_OpenPort(0, LEP_CCI_TWI, 0, &portDesc);
 	if (result != LEP_OK) {
-		pr_err("LEP_OpenPort failed");
+		pr_err("LEP_OpenPort failed\n");
 		goto open_port_failed;
 	}
 
@@ -98,42 +102,41 @@ int main(int argc, char *argv[])
 	pr_info("LEPTON Sdk version:%d.%d.%d\n", version.major, version.minor, version.build);
 
 	/* shutter control */
-uint64_t elapsed;
 
 PERF_MEASURE_US(elapsed,
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_CLOSED);
 	if (result != LEP_OK) {
-		pr_err("LEP_SetSysShutterPosition failed");
+		pr_err("LEP_SetSysShutterPosition failed\n");
 		goto cci_ops_failed;
 	}
 );
 
-	pr_debug("elapsed time: %ld us\n", (uint64_t)elapsed);
+	pr_debug("LEP_SetSysShutterPosition elapsed time: %ld us\n", (uint64_t)elapsed);
 
 
 PERF_MEASURE_US(elapsed,
 	result = LEP_SetSysShutterPosition(&portDesc, LEP_SYS_SHUTTER_POSITION_OPEN);
 	if (result != LEP_OK) {
-		pr_err("LEP_SetSysShutterPosition failed");
+		pr_err("LEP_SetSysShutterPosition failed\n");
 		goto cci_ops_failed;
 	}
 );
 
-	pr_debug("elapsed time: %ld us\n", (uint64_t)elapsed);
+	pr_debug("LEP_SetSysShutterPosition elapsed time: %ld us\n", (uint64_t)elapsed);
 
 
 	/* enable vsync signal, and then the image streaming will start */
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
 	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
 	if (result != LEP_OK) {
-		pr_err("LEP_GetOemGpioMode failed");
+		pr_err("LEP_GetOemGpioMode failed\n");
 		goto cci_ops_failed;
 	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_VSYNC);
 	if (result != LEP_OK) {
-		pr_err("LEP_SetOemGpioMode failed");
+		pr_err("LEP_SetOemGpioMode failed\n");
 		goto cci_ops_failed;
 	}
 	pr_info("LEP_SetOemGpioMode result = %d.\n", result);
@@ -141,13 +144,14 @@ PERF_MEASURE_US(elapsed,
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
 	result = LEP_GetOemGpioMode(&portDesc, &gpio_mode);
 	if (result != LEP_OK) {
-		pr_err("LEP_GetOemGpioMode failed");
+		pr_err("LEP_GetOemGpioMode failed\n");
 		goto cci_ops_failed;
 	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 100; ++i) {
 		sdk_image_buf_t *buf = sdk_recv_image(h, 120);
+
 		if (buf == NULL) {
 			pr_info("timeout or network error\n");
 			continue;
@@ -159,7 +163,7 @@ PERF_MEASURE_US(elapsed,
 		sdk_release_image(h, buf);
 	}
 
-	/* disable vsync signal, and the the image streaming will stop */
+	// /* disable vsync signal, and the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
 	if (result != LEP_OK) {
 		pr_err("LEP_SetOemGpioMode failed\n");

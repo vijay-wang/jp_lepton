@@ -118,6 +118,7 @@ static int mod_wait(sdk_image_module_t *m, int timeout_ms)
 {
 #ifdef _WIN32
 	DWORD ms = (timeout_ms < 0) ? INFINITE : (DWORD)timeout_ms;
+
 	if (!SleepConditionVariableCS(&m->cond, &m->lock, ms))
 		return -1;
 	return 0;
@@ -132,6 +133,7 @@ static int mod_wait(sdk_image_module_t *m, int timeout_ms)
 	}
 	{
 		struct timespec ts;
+
 		clock_gettime(CLOCK_REALTIME, &ts);
 		ts.tv_sec  += timeout_ms / 1000;
 		ts.tv_nsec += (long)(timeout_ms % 1000) * 1000000L;
@@ -253,6 +255,7 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
 		evict_idx = -1;
 		for (i = 0; i < mod->depth; i++) {
 			int idx = (mod->read_idx + i) % mod->depth;
+
 			if (mod->slots[idx].ref == 0) {
 				evict_idx = idx;
 				/* Advance read_idx past the evicted slot */

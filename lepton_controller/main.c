@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	pr_info("tx_pool size:%ld\n", tx_pool_sz);
 
 	main_run = 1;
-	while(main_run) {
+	while (main_run) {
 		uint8_t *buf;
 		int direction;
 		uint16_t reg_addr;

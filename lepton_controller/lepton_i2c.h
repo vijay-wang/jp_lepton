@@ -60,8 +60,8 @@ int lepton_i2c_read_reg(const lepton_i2c_t *ctx, uint16_t reg, uint16_t *out);
  * @n:          字数
  */
 int lepton_i2c_write_words(const lepton_i2c_t *ctx,
-                           uint16_t start_reg,
-                           const uint16_t *words, int n);
+			   uint16_t start_reg,
+			   const uint16_t *words, int n);
 
 /**
  * lepton_i2c_read_words - 连续读取 n 个 16-bit 字（地址自增）
@@ -70,8 +70,8 @@ int lepton_i2c_write_words(const lepton_i2c_t *ctx,
  * @n:          字数
  */
 int lepton_i2c_read_words(const lepton_i2c_t *ctx,
-                          uint16_t start_reg,
-                          uint16_t *buf, int n);
+			  uint16_t start_reg,
+			  uint16_t *buf, int n);
 
 #ifdef __cplusplus
 }

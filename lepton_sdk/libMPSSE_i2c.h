@@ -69,18 +69,17 @@ typedef signed long long int64;
 //typedef unsigned char	bool;
 #endif
 
-typedef enum I2C_ClockRate_t{
+typedef enum I2C_ClockRate_t {
 	I2C_CLOCK_STANDARD_MODE = 100000,							// 100kb/sec
 	I2C_CLOCK_STANDARD_MODE_3P = 133333,						// 100kb/sec with 3-phase clocks
 	I2C_CLOCK_FAST_MODE = 400000,								// 400kb/sec
-	I2C_CLOCK_FAST_MODE_PLUS = 1000000, 						// 1000kb/sec
-	I2C_CLOCK_HIGH_SPEED_MODE = 3400000 					    // 3.4Mb/sec
-}I2C_CLOCKRATE;
+	I2C_CLOCK_FAST_MODE_PLUS = 1000000,						// 1000kb/sec
+	I2C_CLOCK_HIGH_SPEED_MODE = 3400000					    // 3.4Mb/sec
+} I2C_CLOCKRATE;
 
 
 /**/
-typedef struct ChannelConfig_t
-{
+typedef struct ChannelConfig_t {
 	I2C_CLOCKRATE	ClockRate;
 
 	uint8			LatencyTimer;
@@ -88,7 +87,7 @@ typedef struct ChannelConfig_t
 	uint32			Options;
 
 
-}ChannelConfig;
+} ChannelConfig;
 
 
 /******************************************************************************/
@@ -104,9 +103,9 @@ typedef struct ChannelConfig_t
 /******************************************************************************/
 FTDI_API FT_STATUS I2C_GetNumChannels(uint32 *numChannels);
 FTDI_API FT_STATUS I2C_GetChannelInfo(uint32 index,
-		FT_DEVICE_LIST_INFO_NODE *chanInfo);
-FTDI_API FT_STATUS I2C_OpenChannel(uint32 index, FT_HANDLE *handle);
-FTDI_API FT_STATUS I2C_InitChannel(FT_HANDLE handle, ChannelConfig *config);
+		FT_DEVICE_LIST_INFO_NODE * chanInfo);
+FTDI_API FT_STATUS I2C_OpenChannel(uint32 index, FT_HANDLE * handle);
+FTDI_API FT_STATUS I2C_InitChannel(FT_HANDLE handle, ChannelConfig * config);
 FTDI_API FT_STATUS I2C_CloseChannel(FT_HANDLE handle);
 FTDI_API FT_STATUS I2C_DeviceRead(FT_HANDLE handle, uint32 deviceAddress,
 		uint32 bytesToTransfer, uint8 *buffer, uint32 *bytesTransfered, uint32 options);
@@ -115,7 +114,7 @@ FTDI_API FT_STATUS I2C_DeviceWrite(FT_HANDLE handle, uint32 deviceAddress,
 FTDI_API void Init_libMPSSE(void);
 FTDI_API void Cleanup_libMPSSE(void);
 FTDI_API FT_STATUS FT_WriteGPIO(FT_HANDLE handle, uint8 dir, uint8 value);
-FTDI_API FT_STATUS FT_ReadGPIO(FT_HANDLE handle,uint8 *value);
+FTDI_API FT_STATUS FT_ReadGPIO(FT_HANDLE handle, uint8 *value);
 
 
 

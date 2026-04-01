@@ -101,7 +101,7 @@ LEP_RESULT LEP_GetVidPolarity(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPolarityPtr == NULL )
+	if (vidPolarityPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -109,11 +109,11 @@ LEP_RESULT LEP_GetVidPolarity(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's Video Polarity
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_POLARITY_SELECT,
 			(LEP_ATTRIBUTE_T_PTR)vidPolarityPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 LEP_RESULT LEP_SetVidPolarity(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -124,7 +124,7 @@ LEP_RESULT LEP_SetVidPolarity(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPolarity >= LEP_VID_END_POLARITY )
+	if (vidPolarity >= LEP_VID_END_POLARITY)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -132,11 +132,11 @@ LEP_RESULT LEP_SetVidPolarity(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's Video Polarity
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_POLARITY_SELECT,
 			(LEP_ATTRIBUTE_T_PTR)&vidPolarity,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 
@@ -148,7 +148,7 @@ LEP_RESULT LEP_GetVidPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPcolorLutPtr == NULL )
+	if (vidPcolorLutPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -156,11 +156,11 @@ LEP_RESULT LEP_GetVidPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's current Video LUT selection
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LUT_SELECT,
 			(LEP_ATTRIBUTE_T_PTR)vidPcolorLutPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 LEP_RESULT LEP_SetVidPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -171,7 +171,7 @@ LEP_RESULT LEP_SetVidPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPcolorLut >= LEP_VID_END_PCOLOR_LUT )
+	if (vidPcolorLut >= LEP_VID_END_PCOLOR_LUT)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -179,11 +179,11 @@ LEP_RESULT LEP_SetVidPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's current Video LUT selection
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LUT_SELECT,
 			(LEP_ATTRIBUTE_T_PTR)&vidPcolorLut,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 LEP_RESULT LEP_GetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 		LEP_PCOLOR_LUT_E_PTR vidPcolorLutPtr)
@@ -193,7 +193,7 @@ LEP_RESULT LEP_GetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPcolorLutPtr == NULL )
+	if (vidPcolorLutPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -201,11 +201,11 @@ LEP_RESULT LEP_GetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's current Video LUT selection
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LOW_GAIN_COLOR_LUT,
 			(LEP_ATTRIBUTE_T_PTR)vidPcolorLutPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 LEP_RESULT LEP_SetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -216,7 +216,7 @@ LEP_RESULT LEP_SetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidPcolorLut >= LEP_VID_END_PCOLOR_LUT )
+	if (vidPcolorLut >= LEP_VID_END_PCOLOR_LUT)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -224,11 +224,11 @@ LEP_RESULT LEP_SetVidLowGainPcolorLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's current Video LUT selection
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LOW_GAIN_COLOR_LUT,
 			(LEP_ATTRIBUTE_T_PTR)&vidPcolorLut,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 LEP_RESULT LEP_GetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -239,7 +239,7 @@ LEP_RESULT LEP_GetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidUserLutBufPtr == NULL )
+	if (vidUserLutBufPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -247,11 +247,11 @@ LEP_RESULT LEP_GetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's User Video LUT
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LUT_TRANSFER,
 			(LEP_ATTRIBUTE_T_PTR)vidUserLutBufPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 LEP_RESULT LEP_SetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -262,7 +262,7 @@ LEP_RESULT LEP_SetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidUserLutBufPtr == NULL )
+	if (vidUserLutBufPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -270,11 +270,11 @@ LEP_RESULT LEP_SetVidUserLut(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's User Video LUT
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_LUT_TRANSFER,
 			(LEP_ATTRIBUTE_T_PTR)vidUserLutBufPtr,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 
@@ -286,7 +286,7 @@ LEP_RESULT LEP_GetVidFocusCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 
 	/* Validate Parameter(s)
 	*/
-	if( vidEnableFocusCalcStatePtr == NULL )
+	if (vidEnableFocusCalcStatePtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -295,11 +295,11 @@ LEP_RESULT LEP_GetVidFocusCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 	 ** Reading the Camera's Video Focus Metric calculation enable
 	 ** state
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_CALC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)vidEnableFocusCalcStatePtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -311,7 +311,7 @@ LEP_RESULT LEP_SetVidFocusCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 
 	/* Validate Parameter(s)
 	*/
-	if( vidFocusCalcEnableState >= LEP_VID_END_FOCUS_CALC_ENABLE )
+	if (vidFocusCalcEnableState >= LEP_VID_END_FOCUS_CALC_ENABLE)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -320,11 +320,11 @@ LEP_RESULT LEP_SetVidFocusCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 	 ** Writing the Camera's Video Focus Metric Calculation enable
 	 ** state
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_CALC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)&vidFocusCalcEnableState,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 LEP_RESULT LEP_GetVidBoresightCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -333,15 +333,15 @@ LEP_RESULT LEP_GetVidBoresightCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDes
 	LEP_RESULT result = LEP_OK;
 	LEP_UINT16 attributeWordLength = 2; /* Enums are 32-bit */
 
-	if(boresightCalcEnableStatePtr == NULL)
+	if (boresightCalcEnableStatePtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
 
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_BORESIGHT_CALC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)boresightCalcEnableStatePtr,
-			attributeWordLength );
+			attributeWordLength);
 
 
 	return(result);
@@ -353,12 +353,12 @@ LEP_RESULT LEP_SetVidBoresightCalcEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDes
 	LEP_RESULT result = LEP_OK;
 	LEP_UINT16 attributeWordLength = 2; /* Enums are 32-bit */
 
-	if(boresightCalcEnableState >= LEP_VID_END_BORESIGHT_CALC_ENABLE_STATE)
+	if (boresightCalcEnableState >= LEP_VID_END_BORESIGHT_CALC_ENABLE_STATE)
 	{
 		return(LEP_RANGE_ERROR);
 	}
 
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_BORESIGHT_CALC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)&boresightCalcEnableState,
 			attributeWordLength);
@@ -371,15 +371,15 @@ LEP_RESULT LEP_GetVidBoresightCoordinates(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 	LEP_RESULT result = LEP_OK;
 	LEP_UINT16 attributeWordLength = 16;
 
-	if( boresightCoordinatesPtr == NULL )
+	if (boresightCoordinatesPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
 
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_BORESIGHT_COORDINATES,
 			(LEP_ATTRIBUTE_T_PTR)boresightCoordinatesPtr,
-			attributeWordLength );
+			attributeWordLength);
 
 	return(result);
 }
@@ -391,13 +391,13 @@ LEP_RESULT LEP_GetVidTargetPosition(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	LEP_VID_BORESIGHT_COORDINATES_T boresightCoordinates;
 	LEP_VID_BORESIGHT_CALC_ENABLE_STATE_E calcEnableState;
 
-	if(targetPositionPtr == NULL)
+	if (targetPositionPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
 #if (USE_BORESIGHT_MEASUREMENT_FUNCTIONS == 1)
 	result = LEP_GetVidBoresightCoordinates(portDescPtr, &boresightCoordinates);
-	if(result == LEP_OK)
+	if (result == LEP_OK)
 	{
 		LEP_CalcVidBoresightAlignment(boresightCoordinates, targetPositionPtr);
 	}
@@ -417,7 +417,7 @@ LEP_RESULT LEP_GetVidROI(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidROIPtr == NULL )
+	if (vidROIPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -425,11 +425,11 @@ LEP_RESULT LEP_GetVidROI(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's AGC ROI
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_ROI,
 			(LEP_ATTRIBUTE_T_PTR)vidROIPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -442,11 +442,11 @@ LEP_RESULT LEP_SetVidROI(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's AGC ROI
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_ROI,
 			(LEP_ATTRIBUTE_T_PTR)&vidROI,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 
@@ -458,7 +458,7 @@ LEP_RESULT LEP_GetVidFocusMetric(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidFocusMetricPtr == NULL )
+	if (vidFocusMetricPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -467,11 +467,11 @@ LEP_RESULT LEP_GetVidFocusMetric(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	 ** Reading the Camera's current video Focus Metric calculation
 	 ** result
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_METRIC,
 			(LEP_ATTRIBUTE_T_PTR)vidFocusMetricPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -483,7 +483,7 @@ LEP_RESULT LEP_GetVidFocusMetricThreshold(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 
 	/* Validate Parameter(s)
 	*/
-	if( vidFocusMetricThresholdPtr == NULL )
+	if (vidFocusMetricThresholdPtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -491,11 +491,11 @@ LEP_RESULT LEP_GetVidFocusMetricThreshold(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 	/* Perform Command
 	 ** Reading the Camera's current video Focus Metric threshold
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_THRESHOLD,
 			(LEP_ATTRIBUTE_T_PTR)vidFocusMetricThresholdPtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 LEP_RESULT LEP_SetVidFocusMetricThreshold(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -510,11 +510,11 @@ LEP_RESULT LEP_SetVidFocusMetricThreshold(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr
 	/* Perform Command
 	 ** Writing the Camera's current video Focus Metric threshold
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FOCUS_THRESHOLD,
 			(LEP_ATTRIBUTE_T_PTR)&vidFocusMetricThreshold,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 
@@ -526,7 +526,7 @@ LEP_RESULT LEP_GetVidSbNucEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidSbNucEnableStatePtr == NULL )
+	if (vidSbNucEnableStatePtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -534,11 +534,11 @@ LEP_RESULT LEP_GetVidSbNucEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's current Scene-Based NUC enable state
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_SBNUC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)vidSbNucEnableStatePtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -550,7 +550,7 @@ LEP_RESULT LEP_SetVidSbNucEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidSbNucEnableState >= LEP_VID_END_SBNUC_ENABLE )
+	if (vidSbNucEnableState >= LEP_VID_END_SBNUC_ENABLE)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -558,11 +558,11 @@ LEP_RESULT LEP_SetVidSbNucEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's current Scene-Based NUC enable state
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_SBNUC_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)&vidSbNucEnableState,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
 
@@ -574,7 +574,7 @@ LEP_RESULT LEP_GetVidFreezeEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidFreezeEnableStatePtr == NULL )
+	if (vidFreezeEnableStatePtr == NULL)
 	{
 		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
@@ -582,11 +582,11 @@ LEP_RESULT LEP_GetVidFreezeEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Reading the Camera's current video freeze enable state
 	 */
-	result = LEP_GetAttribute( portDescPtr,
+	result = LEP_GetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FREEZE_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)vidFreezeEnableStatePtr,
-			attributeWordLength );
-	return( result );
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -598,7 +598,7 @@ LEP_RESULT LEP_SetVidFreezeEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 
 	/* Validate Parameter(s)
 	*/
-	if( vidFreezeEnableState >= LEP_VID_END_FREEZE_ENABLE )
+	if (vidFreezeEnableState >= LEP_VID_END_FREEZE_ENABLE)
 	{
 		return(LEP_RANGE_ERROR);
 	}
@@ -606,58 +606,58 @@ LEP_RESULT LEP_SetVidFreezeEnableState(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 	/* Perform Command
 	 ** Writing the Camera's current video freeze enable state
 	 */
-	result = LEP_SetAttribute( portDescPtr,
+	result = LEP_SetAttribute(portDescPtr,
 			(LEP_COMMAND_ID)LEP_CID_VID_FREEZE_ENABLE,
 			(LEP_ATTRIBUTE_T_PTR)&vidFreezeEnableState,
 			attributeWordLength);
-	return( result );
+	return(result);
 }
 
-LEP_RESULT LEP_GetVidVideoOutputFormat( LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
-		LEP_VID_VIDEO_OUTPUT_FORMAT_E_PTR vidVideoOutputFormatPtr )
+LEP_RESULT LEP_GetVidVideoOutputFormat(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
+		LEP_VID_VIDEO_OUTPUT_FORMAT_E_PTR vidVideoOutputFormatPtr)
 {
 	LEP_RESULT  result = LEP_OK;
 	LEP_UINT16 attributeWordLength = 2; /* two 16-bit values for 32-bit enum */
 
 	/* Validate Parameter(s)
 	*/
-	if( vidVideoOutputFormatPtr == NULL )
+	if (vidVideoOutputFormatPtr == NULL)
 	{
-		return( LEP_BAD_ARG_POINTER_ERROR );
+		return(LEP_BAD_ARG_POINTER_ERROR);
 	}
 
 	/* Perform Command
 	 ** Reading the Camera's current video output format
 	 */
-	result = LEP_GetAttribute( portDescPtr,
-			( LEP_COMMAND_ID )LEP_CID_VID_VIDEO_OUTPUT_FORMAT,
-			( LEP_ATTRIBUTE_T_PTR )vidVideoOutputFormatPtr,
-			attributeWordLength );
-	return( result );
+	result = LEP_GetAttribute(portDescPtr,
+			(LEP_COMMAND_ID)LEP_CID_VID_VIDEO_OUTPUT_FORMAT,
+			(LEP_ATTRIBUTE_T_PTR)vidVideoOutputFormatPtr,
+			attributeWordLength);
+	return(result);
 }
 
 
-LEP_RESULT LEP_SetVidVideoOutputFormat( LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
-		LEP_VID_VIDEO_OUTPUT_FORMAT_E vidVideoOutputFormat )
+LEP_RESULT LEP_SetVidVideoOutputFormat(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
+		LEP_VID_VIDEO_OUTPUT_FORMAT_E vidVideoOutputFormat)
 {
 	LEP_RESULT  result = LEP_OK;
 	LEP_UINT16 attributeWordLength = 2; /* two 16-bit values for 32-bit enum */
 
 	/* Validate Parameter(s)
 	*/
-	if( vidVideoOutputFormat >= LEP_END_VID_VIDEO_OUTPUT_FORMAT )
+	if (vidVideoOutputFormat >= LEP_END_VID_VIDEO_OUTPUT_FORMAT)
 	{
-		return( LEP_RANGE_ERROR );
+		return(LEP_RANGE_ERROR);
 	}
 
 	/* Perform Command
 	 ** Writing the Camera's current video output format
 	 */
-	result = LEP_SetAttribute( portDescPtr,
-			( LEP_COMMAND_ID )LEP_CID_VID_VIDEO_OUTPUT_FORMAT,
-			( LEP_ATTRIBUTE_T_PTR ) & vidVideoOutputFormat,
-			attributeWordLength );
-	return( result );
+	result = LEP_SetAttribute(portDescPtr,
+			(LEP_COMMAND_ID)LEP_CID_VID_VIDEO_OUTPUT_FORMAT,
+			(LEP_ATTRIBUTE_T_PTR) & vidVideoOutputFormat,
+			attributeWordLength);
+	return(result);
 }
 
 
@@ -681,7 +681,7 @@ LEP_RESULT LEP_CalcVidBoresightAlignment(LEP_VID_BORESIGHT_COORDINATES_T boresig
 	cols = boresightCoordinates.right_1.col - boresightCoordinates.left_0.col + 1.0;
 
 	/* Both lines are perfect horizontal/vertical */
-	if((left == right) && (top == bot))
+	if ((left == right) && (top == bot))
 	{
 		targetPositionPtr->col = top;
 		targetPositionPtr->row = left;

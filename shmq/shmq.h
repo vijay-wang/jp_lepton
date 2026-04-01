@@ -146,17 +146,17 @@ extern "C" {
 	/* ioctl commands */
 	/*                                  nr   direction  type */
 #define SHMQ_IOC_CREATE         _IOWR(SHMQ_IOC_MAGIC,  1, struct shmq_create)
-#define SHMQ_IOC_DESTROY        _IOW (SHMQ_IOC_MAGIC,  2, struct shmq_queue_id)
-#define SHMQ_IOC_SET_TIMEOUT    _IOW (SHMQ_IOC_MAGIC,  3, struct shmq_timeout)
-#define SHMQ_IOC_POLL_INTEREST  _IOW (SHMQ_IOC_MAGIC,  4, struct shmq_poll_interest)
+#define SHMQ_IOC_DESTROY        _IOW(SHMQ_IOC_MAGIC,  2, struct shmq_queue_id)
+#define SHMQ_IOC_SET_TIMEOUT    _IOW(SHMQ_IOC_MAGIC,  3, struct shmq_timeout)
+#define SHMQ_IOC_POLL_INTEREST  _IOW(SHMQ_IOC_MAGIC,  4, struct shmq_poll_interest)
 #define SHMQ_IOC_GET_FREE       _IOWR(SHMQ_IOC_MAGIC,  5, struct shmq_buf_desc)
-#define SHMQ_IOC_ENQUEUE        _IOW (SHMQ_IOC_MAGIC,  6, struct shmq_buf_desc)
+#define SHMQ_IOC_ENQUEUE        _IOW(SHMQ_IOC_MAGIC,  6, struct shmq_buf_desc)
 #define SHMQ_IOC_DEQUEUE        _IOWR(SHMQ_IOC_MAGIC,  7, struct shmq_buf_desc)
-#define SHMQ_IOC_RELEASE        _IOW (SHMQ_IOC_MAGIC,  8, struct shmq_buf_desc)
+#define SHMQ_IOC_RELEASE        _IOW(SHMQ_IOC_MAGIC,  8, struct shmq_buf_desc)
 #define SHMQ_IOC_PEEK           _IOWR(SHMQ_IOC_MAGIC,  9, struct shmq_buf_desc)
-#define SHMQ_IOC_FLUSH          _IOW (SHMQ_IOC_MAGIC, 10, struct shmq_queue_id)
+#define SHMQ_IOC_FLUSH          _IOW(SHMQ_IOC_MAGIC, 10, struct shmq_queue_id)
 #define SHMQ_IOC_STATS          _IOWR(SHMQ_IOC_MAGIC, 11, struct shmq_stats)
-#define SHMQ_IOC_LIST           _IOR (SHMQ_IOC_MAGIC, 12, struct shmq_list)
+#define SHMQ_IOC_LIST           _IOR(SHMQ_IOC_MAGIC, 12, struct shmq_list)
 #define SHMQ_IOC_MMAP_INFO      _IOWR(SHMQ_IOC_MAGIC, 13, struct shmq_mmap_info)
 
 	/*
@@ -164,7 +164,7 @@ extern "C" {
 	 * Must be called (with the target queue_id) before every mmap().
 	 * mmap() offset must be 0.
 	 */
-#define SHMQ_IOC_MMAP_SELECT    _IOW (SHMQ_IOC_MAGIC, 15, __u32)
+#define SHMQ_IOC_MMAP_SELECT    _IOW(SHMQ_IOC_MAGIC, 15, __u32)
 #define SHMQ_IOC_LOOKUP         _IOWR(SHMQ_IOC_MAGIC, 14, struct shmq_lookup)
 
 	int shmq_open_dev(void);

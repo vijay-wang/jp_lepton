@@ -86,13 +86,12 @@ extern "C"
 	/******************************************************************************/
 
 
-	typedef enum LEP_I2C_COMMAND_STATUS_TAG
-	{
+	typedef enum LEP_I2C_COMMAND_STATUS_TAG {
 		LEP_I2C_COMMAND_NOT_BUSY = 0,
 		LEP_I2C_COMMAND_IS_BUSY,
 		LEP_I2C_END_COMMAND_STATUS
 
-	}LEP_I2C_COMMAND_STATUS_E, *LEP_I2C_COMMAND_STATUS_E_PTR;
+	} LEP_I2C_COMMAND_STATUS_E, *LEP_I2C_COMMAND_STATUS_E_PTR;
 
 	/******************************************************************************/
 	/** EXPORTED PUBLIC DATA                                                     **/
@@ -112,7 +111,7 @@ extern "C"
 
 	extern LEP_RESULT LEP_I2C_OpenPort(LEP_UINT16 portID,
 			LEP_UINT16 *baudRateInkHz,
-			LEP_UINT8 *deviceAddress);
+			LEP_UINT8 * deviceAddress);
 
 	extern LEP_RESULT LEP_I2C_ClosePort(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr);
 
@@ -138,7 +137,7 @@ extern "C"
 	extern LEP_RESULT LEP_I2C_GetPortStatus(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr);
 
 	extern LEP_RESULT LEP_I2C_GetDeviceAddress(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
-			LEP_UINT8* deviceAddress);
+			LEP_UINT8 * deviceAddress);
 
 	extern LEP_RESULT LEP_I2C_DirectWriteRegister(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
 			LEP_UINT16 regAddress,

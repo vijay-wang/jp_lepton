@@ -74,9 +74,9 @@
 #include <windows.h>
 #include <ws2tcpip.h>
 
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
+#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "Mswsock.lib")
+#pragma comment(lib, "AdvApi32.lib")
 #endif
 
 /* Linux i2c device include */
@@ -110,7 +110,7 @@ LEP_PROTOCOL_DEVICE_E masterDevice = LINUX_I2CDEV_I2C;
 Aardvark handle;
 
 /* cci comminication handle */
-void *ccih = NULL;
+void *ccih;
 
 #define MAC_COM_I2C_READ 0
 #define MAC_COM_I2C_WRITE 1
@@ -226,7 +226,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 	pr_err("You are here.  masterDevice is: %d\n", (int)masterDevice);
 	/* Place Device-Specific Interface here
 	*/
-	switch(masterDevice)
+	switch (masterDevice)
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
@@ -240,16 +240,16 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			result = LEP_ERROR_CREATING_COMM;
 
 			status = I2C_GetNumChannels(&channels);
-			if(channels > 0)
+			if (channels > 0)
 			{
 
-				for(i = 0; i < channels; i++)
+				for (i = 0; i < channels; i++)
 				{
 					status = I2C_GetChannelInfo(i, &devList);
-					if(strcmp(FTDI_DEVICE_STRING, devList.Description) == 0)
+					if (strcmp(FTDI_DEVICE_STRING, devList.Description) == 0)
 					{
-						status = I2C_OpenChannel(i ,&ftHandle);
-						status = I2C_InitChannel(ftHandle,&channelConf);
+						status = I2C_OpenChannel(i, &ftHandle);
+						status = I2C_InitChannel(ftHandle, &channelConf);
 						result = LEP_OK;
 
 						break;
@@ -262,21 +262,21 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			closesocket(ConnectSocket);
 
 			// Initialize Winsock
-			res = WSAStartup(MAKEWORD(2,2), &wsaData);
+			res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 			if (res != 0) {
 				pr_err("WSAStartup failed with error: %d\n", res);
 				result = LEP_ERROR;
 				return(result);
 			}
 
-			ZeroMemory( &hints, sizeof(hints) );
+			ZeroMemory(&hints, sizeof(hints));
 			hints.ai_family = AF_UNSPEC;
 			hints.ai_socktype = SOCK_STREAM;
 			hints.ai_protocol = IPPROTO_TCP;
 
 			// Resolve the server address and port
 			res = getaddrinfo(DEFAULT_ADDR, DEFAULT_PORT, &hints, &addrresult);
-			if ( res != 0 ) {
+			if (res != 0) {
 				pr_err("getaddrinfo failed with error: %d\n", res);
 				WSACleanup();
 				result = LEP_ERROR;
@@ -295,7 +295,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 			ioctlsocket(ConnectSocket, FIONBIO, &nonBlockMode);
 
 			// Connect to server, returns immediately
-			res = connect( ConnectSocket, addrresult->ai_addr, (int)addrresult->ai_addrlen);
+			res = connect(ConnectSocket, addrresult->ai_addr, (int)addrresult->ai_addrlen);
 			if (res == SOCKET_ERROR)
 			{
 				res = WSAGetLastError();
@@ -309,13 +309,12 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 					socketTimeout.tv_sec  = 1; //Sets timeout to 1 second
 					socketTimeout.tv_usec = 0;
 
-					res = select (0, NULL, &Write, &fdErr, &socketTimeout);
+					res = select(0, NULL, &Write, &fdErr, &socketTimeout);
 
 					if (res == 0)
 					{
 						result = LEP_ERROR;
-					}
-					else
+					} else
 					{
 						if (FD_ISSET(ConnectSocket, &Write))
 						{
@@ -347,7 +346,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 		default:
 			numAardvarkConnected = aa_find_devices(1, &numFreeDevices);
 
-			if(numAardvarkConnected < 1 || numFreeDevices == AA_PORT_NOT_FREE)
+			if (numAardvarkConnected < 1 || numFreeDevices == AA_PORT_NOT_FREE)
 			{
 				return(LEP_ERROR_CREATING_COMM);
 			}
@@ -369,13 +368,13 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
  *
  * @return LEP_RESULT  0 if all goes well, errno otherwise.
  */
-LEP_RESULT DEV_I2C_MasterClose()
+LEP_RESULT DEV_I2C_MasterClose(void)
 {
 	LEP_RESULT result = LEP_OK;
 
 	/* Place Device-Specific Interface here
 	*/
-	switch(masterDevice)
+	switch (masterDevice)
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
@@ -406,13 +405,13 @@ LEP_RESULT DEV_I2C_MasterClose()
  *
  * @return LEP_RESULT  0 if all goes well, errno otherwise.
  */
-LEP_RESULT DEV_I2C_MasterReset(void )
+LEP_RESULT DEV_I2C_MasterReset(void)
 {
 	LEP_RESULT result = LEP_OK;
 
 	/* Place Device-Specific Interface here
 	*/
-	switch(masterDevice)
+	switch (masterDevice)
 	{
 		case DEV_BOARD_FTDI_V2:
 
@@ -442,6 +441,7 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 		LEP_UINT16 *readDataPtr,          // Read DATA buffer pointer
 		LEP_UINT16  wordsToRead,          // Number of 16-bit words to Read
 		LEP_UINT16 *numWordsRead,         // Number of 16-bit words actually Read
+
 		LEP_UINT16 *status                // Transaction Status
 		)
 {
@@ -457,16 +457,16 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 	LEP_UINT32 bytesActuallyWritten = 0;
 	LEP_UINT32 bytesActuallyRead = 0;
 	LEP_UINT32 wordsActuallyRead = 0;
-	LEP_UINT8* txdata = &tx[0];
-	LEP_UINT8* rxdata = &rx[0];
+	LEP_UINT8 *txdata = &tx[0];
+	LEP_UINT8 *rxdata = &rx[0];
 	LEP_UINT16 *dataPtr;
 	LEP_UINT16 *writePtr;
 
 	if (masterDevice != MAC_COM)
-		*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+		*(LEP_UINT16 *)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
 
 
-	switch(masterDevice)
+	switch (masterDevice)
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
@@ -475,40 +475,40 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 			/*
 			   Write the address, which is 2 bytes
 			   */
-			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, ADDRESS_SIZE_BYTES, (uint8*)txdata, (uint32*)&bytesActuallyWritten, 0x1d);
+			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, ADDRESS_SIZE_BYTES, (uint8 *)txdata, (uint32 *)&bytesActuallyWritten, 0x1d);
 
 			/*
 			   Read back the data at the address written above
 			   */
-			ftdiStatus = I2C_DeviceRead(ftHandle, (uint32)deviceAddress, (uint32)bytesToRead, (uint8*)rxdata, (uint32*)&bytesActuallyRead, 0x19);
+			ftdiStatus = I2C_DeviceRead(ftHandle, (uint32)deviceAddress, (uint32)bytesToRead, (uint8 *)rxdata, (uint32 *)&bytesActuallyRead, 0x19);
 
 			ftdiStatus = 0;
 			bytesActuallyRead = bytesToRead;
 
-			if(ftdiStatus != 0 || bytesActuallyRead != bytesToRead)
+			if (ftdiStatus != 0 || bytesActuallyRead != bytesToRead)
 			{
 				result = LEP_ERROR;
 			}
 			break;
 		case TCP_IP:
 
-			memcpy((LEP_UINT8*)cmdPacket.data, (LEP_UINT8*)txdata, ADDRESS_SIZE_BYTES);
+			memcpy((LEP_UINT8 *)cmdPacket.data, (LEP_UINT8 *)txdata, ADDRESS_SIZE_BYTES);
 			cmdPacket.deviceAddress = (LEP_UINT8)deviceAddress;
 			cmdPacket.bytesToTransfer = (LEP_UINT16)bytesToRead;
 			cmdPacket.readOrWrite = REG_READ;
 
 			/* Send command to read the data */
 			bytesActuallyRead = 0;
-			while( bytesActuallyRead < sizeof(LEP_CMD_PACKET_T) )
+			while (bytesActuallyRead < sizeof(LEP_CMD_PACKET_T))
 			{
-				bytesActuallyRead += send(ConnectSocket, ((char*)&cmdPacket) + bytesActuallyRead, sizeof(LEP_CMD_PACKET_T) - bytesActuallyRead, 0);
+				bytesActuallyRead += send(ConnectSocket, ((char *)&cmdPacket) + bytesActuallyRead, sizeof(LEP_CMD_PACKET_T) - bytesActuallyRead, 0);
 			}
 
 			/* Receive the response */
 			bytesActuallyRead = 0;
-			while( bytesActuallyRead < sizeof(LEP_RESPONSE_PACKET_T) )
+			while (bytesActuallyRead < sizeof(LEP_RESPONSE_PACKET_T))
 			{
-				bytesActuallyRead += recv(ConnectSocket, ((char*)&responsePacket) + bytesActuallyRead, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyRead, 0);
+				bytesActuallyRead += recv(ConnectSocket, ((char *)&responsePacket) + bytesActuallyRead, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyRead, 0);
 			}
 			bytesActuallyRead = responsePacket.bytesTransferred;
 			memcpy(rxdata, responsePacket.data, bytesToRead);
@@ -517,11 +517,11 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 #endif
 		case LINUX_I2CDEV_I2C:
 			bytesActuallyRead = i2cdev_read_byte_data(txdata, rxdata, bytesToRead);
-			if(bytesActuallyRead != bytesToRead)
+			if (bytesActuallyRead != bytesToRead)
 			{
 				result = LEP_ERROR_I2C_FAIL;
 			}
-			if(bytesActuallyRead < 0)
+			if (bytesActuallyRead < 0)
 			{
 				// don't shift negative values into wordsActuallyRead
 				bytesActuallyRead = 0;
@@ -561,16 +561,15 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 					AA_I2C_NO_FLAGS,
 					bytesToWrite,
 					txdata,
-					(LEP_UINT16*)&bytesActuallyWritten,
+					(LEP_UINT16 *)&bytesActuallyWritten,
 					bytesToRead,
 					rxdata,
-					(LEP_UINT16*)&bytesActuallyRead);
+					(LEP_UINT16 *)&bytesActuallyRead);
 
-			if(aardvark_result != 0 || bytesActuallyRead != bytesToRead)
+			if (aardvark_result != 0 || bytesActuallyRead != bytesToRead)
 			{
 				result = LEP_ERROR_I2C_FAIL;
-			}
-			else
+			} else
 			{
 				result = (LEP_RESULT)aardvark_result;
 			}
@@ -581,11 +580,11 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 	wordsActuallyRead = (LEP_UINT16)(bytesActuallyRead >> 1);
 	*numWordsRead = wordsActuallyRead;
 
-	if(result == LEP_OK)
+	if (result == LEP_OK)
 	{
-		dataPtr = (LEP_UINT16*)&rxdata[0];
+		dataPtr = (LEP_UINT16 *)&rxdata[0];
 		writePtr = readDataPtr;
-		while(wordsActuallyRead--)
+		while (wordsActuallyRead--)
 		{
 			*writePtr++ = REVERSE_ENDIENESS_UINT16(*dataPtr);
 			dataPtr++;
@@ -602,6 +601,7 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 		LEP_UINT16 *writeDataPtr,        // Write DATA buffer pointer
 		LEP_UINT16  wordsToWrite,        // Number of 16-bit words to Write
 		LEP_UINT16 *numWordsWritten,     // Number of 16-bit words actually written
+
 		LEP_UINT16 *status)              // Transaction Status
 {
 	LEP_RESULT result = LEP_OK;
@@ -611,28 +611,28 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 	LEP_INT32 bytesOfDataToWrite = (wordsToWrite << 1);
 	LEP_INT32 bytesToWrite = bytesOfDataToWrite + ADDRESS_SIZE_BYTES;
 	LEP_INT32 bytesActuallyWritten = 0;
-	LEP_UINT8* txdata = &tx[0];
+	LEP_UINT8 *txdata = &tx[0];
 	LEP_UINT16 *dataPtr;
 	LEP_UINT16 *txPtr;
 
 	if (masterDevice != MAC_COM) {
-		*(LEP_UINT16*)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
-		dataPtr = (LEP_UINT16*)&writeDataPtr[0];
-		txPtr = (LEP_UINT16*)&txdata[ADDRESS_SIZE_BYTES];
-		while(wordsToWrite--){
+		*(LEP_UINT16 *)txdata = REVERSE_ENDIENESS_UINT16(regAddress);
+		dataPtr = (LEP_UINT16 *)&writeDataPtr[0];
+		txPtr = (LEP_UINT16 *)&txdata[ADDRESS_SIZE_BYTES];
+		while (wordsToWrite--) {
 			*txPtr++ = (LEP_UINT16)REVERSE_ENDIENESS_UINT16(*dataPtr);
 			dataPtr++;
 		}
 	}
 
-	switch(masterDevice)
+	switch (masterDevice)
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
 
-			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, bytesToWrite, (uint8*)txdata, (uint32*)&bytesActuallyWritten, 0x13);
+			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, bytesToWrite, (uint8 *)txdata, (uint32 *)&bytesActuallyWritten, 0x13);
 
-			if(ftdiStatus != 0 || bytesActuallyWritten != bytesToWrite)
+			if (ftdiStatus != 0 || bytesActuallyWritten != bytesToWrite)
 			{
 				result = LEP_ERROR;
 			}
@@ -645,16 +645,16 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 
 			/* Send command to write the data */
 			bytesActuallyWritten = 0;
-			while( bytesActuallyWritten < sizeof(LEP_CMD_PACKET_T) )
+			while (bytesActuallyWritten < sizeof(LEP_CMD_PACKET_T))
 			{
-				bytesActuallyWritten += send(ConnectSocket, ((char*)&cmdPacket) + bytesActuallyWritten, sizeof(LEP_CMD_PACKET_T) - bytesActuallyWritten, 0);
+				bytesActuallyWritten += send(ConnectSocket, ((char *)&cmdPacket) + bytesActuallyWritten, sizeof(LEP_CMD_PACKET_T) - bytesActuallyWritten, 0);
 			}
 
 			/* Receive the response */
 			bytesActuallyWritten = 0;
-			while( bytesActuallyWritten < sizeof(LEP_RESPONSE_PACKET_T) )
+			while (bytesActuallyWritten < sizeof(LEP_RESPONSE_PACKET_T))
 			{
-				bytesActuallyWritten += recv(ConnectSocket, ((char*)&responsePacket) + bytesActuallyWritten, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyWritten, 0);
+				bytesActuallyWritten += recv(ConnectSocket, ((char *)&responsePacket) + bytesActuallyWritten, sizeof(LEP_RESPONSE_PACKET_T) - bytesActuallyWritten, 0);
 			}
 			bytesActuallyWritten = responsePacket.bytesTransferred;
 
@@ -662,11 +662,11 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 #endif
 		case LINUX_I2CDEV_I2C:
 			bytesActuallyWritten = i2cdev_write_byte_data(txdata, bytesToWrite);
-			if(bytesActuallyWritten != bytesToWrite)
+			if (bytesActuallyWritten != bytesToWrite)
 			{
 				result = LEP_ERROR;
 			}
-			if(bytesActuallyWritten < 0)
+			if (bytesActuallyWritten < 0)
 			{
 				// don't shift negative values into numWordsWritten
 				bytesActuallyWritten = 0;
@@ -704,10 +704,10 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 		case AARDVARK_I2C:
 		default:
 
-			aardvark_result = aa_i2c_write_ext(handle, deviceAddress, AA_I2C_NO_FLAGS, bytesToWrite, (LEP_UINT8*)txdata, (u16*)&bytesActuallyWritten);
+			aardvark_result = aa_i2c_write_ext(handle, deviceAddress, AA_I2C_NO_FLAGS, bytesToWrite, (LEP_UINT8 *)txdata, (u16 *)&bytesActuallyWritten);
 			break;
 
-			if(aardvark_result != 0 || bytesActuallyWritten != bytesToWrite)
+			if (aardvark_result != 0 || bytesActuallyWritten != bytesToWrite)
 			{
 				result = LEP_ERROR;
 			}
@@ -718,10 +718,11 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 	return(result);
 }
 
-LEP_RESULT DEV_I2C_MasterReadRegister( LEP_UINT16 portID,
+LEP_RESULT DEV_I2C_MasterReadRegister(LEP_UINT16 portID,
 		LEP_UINT8  deviceAddress,
 		LEP_UINT16 regAddress,
 		LEP_UINT16 *regValue,     // Number of 16-bit words actually written
+
 		LEP_UINT16 *status
 		)
 {
@@ -735,10 +736,11 @@ LEP_RESULT DEV_I2C_MasterReadRegister( LEP_UINT16 portID,
 	return(result);
 }
 
-LEP_RESULT DEV_I2C_MasterWriteRegister( LEP_UINT16 portID,
+LEP_RESULT DEV_I2C_MasterWriteRegister(LEP_UINT16 portID,
 		LEP_UINT8  deviceAddress,
 		LEP_UINT16 regAddress,
 		LEP_UINT16 regValue,     // Number of 16-bit words actually written
+
 		LEP_UINT16 *status
 		)
 {
@@ -751,7 +753,7 @@ LEP_RESULT DEV_I2C_MasterWriteRegister( LEP_UINT16 portID,
 	return(result);
 }
 
-LEP_RESULT DEV_I2C_MasterStatus(void )
+LEP_RESULT DEV_I2C_MasterStatus(void)
 {
 	LEP_RESULT result = LEP_OK;
 

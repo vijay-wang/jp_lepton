@@ -49,9 +49,11 @@ static inline void perf_tick_now(perf_tick_t *t)
 #if defined(_WIN32) || defined(_WIN64)
 static inline int64_t __perf_tick_freq(void)
 {
-	static int64_t freq = 0;
+	static int64_t freq;
+
 	if (freq == 0) {
 		LARGE_INTEGER f;
+
 		QueryPerformanceFrequency(&f);
 		freq = (int64_t)f.QuadPart;
 	}
