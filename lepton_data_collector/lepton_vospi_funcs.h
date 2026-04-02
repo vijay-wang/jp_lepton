@@ -15,8 +15,10 @@
 #define LEPTON2_TELEMETRY_SUBFRAME_LINE_HEIGHT LEPTON2_TELEMETRY_LINE_HEIGHT // each (full) frame has 3 extra lines
 #define LEPTON2_TELEMETRY_FRAME_LINE_HEIGHT LEPTON2_TELEMETRY_SUBFRAME_LINE_HEIGHT
 #define LEPTON2_TELEMETRY_SUBFRAME_SIZE (LEPTON2_TELEMETRY_SUBFRAME_LINE_HEIGHT * LEPTON_SUBFRAME_LINE_BYTE_WIDTH)
-#define LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT 1  // each subframe has 1 extra line
-#define LEPTON3_TELEMETRY_SUBFRAME_SIZE (LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT * LEPTON_SUBFRAME_LINE_BYTE_WIDTH)
+#define LEPTON3_SUBFRAME_EXTRA_LINE_HEIGHT 1  // when telemetry on, each subframe has 1 extra line
+#define LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT (LEPTON_SUBFRAME_DATA_LINE_HEIGHT + LEPTON3_SUBFRAME_EXTRA_LINE_HEIGHT)
+#define LEPTON3_TELEMETRY_LINE_HEIGHT 4  // semgment1 or semgent4 has 4 telemetry line
+#define LEPTON3_SUBFRAME_EXTRA_SIZE (LEPTON3_SUBFRAME_EXTRA_LINE_HEIGHT * LEPTON_SUBFRAME_LINE_BYTE_WIDTH)
 
 // constants for collecting the subframe index from Lepton 3.x subframes
 #define LEPTON3_SUBFRAME_INDEX_LINE1 20
@@ -53,6 +55,7 @@ typedef struct _lepton_vospi_info_t {
 	unsigned int last_crc_sum; // filled in for Lepton 2 for frame comparisons
 	struct subframe_parameters subframe_params;
 	struct image_parameters image_params;
+	unsigned int next_pixel_line_offset;
 } lepton_vospi_info;
 
 /*

@@ -59,7 +59,8 @@ static telemetry_location telemetry_loc = TELEMETRY_OFF;
 
 static lepton_vospi_info lep_info;
 static int              frame_number;
-static unsigned short	*pixel_data;
+static unsigned short	*pixel_data = NULL;
+static unsigned short	*telemetry_data = NULL;
 static int		fd_q;
 static uint32_t		qid;
 static uint8_t		*pool;
@@ -138,9 +139,29 @@ static void process_image(const void *p, int size)
 	int lc_errs = 0;
 	int ret;
 	struct shmq_buf_desc d = { .queue_id = qid };
+	sdk_pixel_fmt_t	fmt	= SDK_PIX_FMT_Y16;
+	uint8_t bpp		= fmt_to_pixel_size(fmt_to_pixel_map, fmt);
+	size_t  reserved_len	= (size_t)img_w * bpp * RESERVED_LINES;
+	size_t  pixels_len	= (size_t)img_w * img_h * bpp;
+	size_t  pixel_off	= HDR_LEN + reserved_len;
+	size_t  total		= HDR_LEN + reserved_len + pixels_len;
+	uint8_t	*buf;
 
 	if (is_subframe_index_valid(&lep_info, (unsigned short *)p) == 0)
 		return;
+
+	// if (pixel_data == NULL && telemetry_data = NULL) {
+	if (pixel_data == NULL) {
+		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
+		if (ret < 0) {
+			pr_info("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
+			return;
+		}
+	}
+
+	buf = pool + d.offset;
+	pixel_data = buf + pixel_off;
+	// telemetry_data = pixel_data -;
 
 	lc_errs = extract_pixel_data(&lep_info, (unsigned short *)p, pixel_data, &done);
 	if (done != 1)
@@ -175,21 +196,6 @@ static void process_image(const void *p, int size)
 	}
 
 	if (to_shmq) {
-		sdk_pixel_fmt_t	fmt	= SDK_PIX_FMT_Y16;
-		uint8_t bpp		= fmt_to_pixel_size(fmt_to_pixel_map, fmt);
-		size_t  reserved_len	= (size_t)img_w * bpp * RESERVED_LINES;
-		size_t  pixels_len	= (size_t)img_w * img_h * bpp;
-		size_t  pixel_off	= HDR_LEN + reserved_len;
-		size_t  total		= HDR_LEN + reserved_len + pixels_len;
-		uint8_t	*buf;
-
-		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
-		if (ret < 0) {
-			pr_info("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
-			return;
-		}
-
-		buf = pool + d.offset;
 		buf[0] = (uint8_t)(img_w >> 8);
 		buf[1] = (uint8_t)(img_w);
 		buf[2] = (uint8_t)(img_h >> 8);
@@ -197,15 +203,14 @@ static void process_image(const void *p, int size)
 		buf[4] = bpp;
 		buf[5] = fmt;
 		*(uint64_t *)(buf + TIMESTAMP_OFF) = timestamp_us();
-
-		memcpy(buf + pixel_off, pixel_data, total);
 		d.data_size = total;
 
 		ret = ioctl(fd_q, SHMQ_IOC_ENQUEUE, &d);
-		if (ret < 0) {
+		if (ret < 0)
 			pr_info("SHMQ_IOC_ENQUEUE failed, errno:%d\n", errno);
-			return;
-		}
+
+		pixel_data = NULL;
+		telemetry_data = NULL;
 	}
 }
 
@@ -846,11 +851,11 @@ int main(int argc, char **argv)
 		pr_info("telemetry at start of subframe data\n");
 	}
 	init_lepton_info(&lep_info, lep_version, telemetry_loc);
-	pixel_data = (unsigned short *)calloc(lep_info.image_params.pixel_width*lep_info.image_params.pixel_height,
-		sizeof(unsigned short));
-	if (!pixel_data) {
-		errno_exit("Cannot allocate pixel buffer");
-	}
+	// pixel_data = (unsigned short *)calloc(lep_info.image_params.pixel_width*lep_info.image_params.pixel_height,
+	// 	sizeof(unsigned short));
+	// if (!pixel_data) {
+	// 	errno_exit("Cannot allocate pixel buffer");
+	// }
 
 	fd_q = shmq_open_dev();
 	sz_buf = RESERVED_OFF + img_w * (img_h + RESERVED_LINES) *
@@ -866,7 +871,7 @@ int main(int argc, char **argv)
 	stop_capturing();
 	uninit_device();
 	close_device();
-	free(pixel_data);
+	// free(pixel_data);
 	shmq_munmap_queue(pool, pool_sz);
 	shmq_destroy_queue(fd_q, qid);
 	shmq_close_dev(fd_q);
