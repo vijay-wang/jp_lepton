@@ -160,10 +160,18 @@ static void process_image(const void *p, int size)
 	}
 
 	buf = pool + d.offset;
-	pixel_data = buf + pixel_off;
-	// telemetry_data = pixel_data -;
+	pixel_data = (unsigned short *)(buf + pixel_off);
 
-	lc_errs = extract_pixel_data(&lep_info, (unsigned short *)p, pixel_data, &done);
+	if (lep_info.telemetry_loc == TELEMETRY_AT_START ||
+	    lep_info.telemetry_loc == TELEMETRY_AT_END) {
+		if (lep_info.lep_version == LEPTON_VERSION_2X)
+			telemetry_data = (unsigned short *)((char *)pixel_data - LEPTON2_TELEMETRY_DATA_SIZE);
+
+		if (lep_info.lep_version == LEPTON_VERSION_3X)
+			telemetry_data = (unsigned short *)((char *)pixel_data - LEPTON3_TELEMETRY_DATA_SIZE);
+	}
+
+	lc_errs = extract_data(&lep_info, (unsigned short *)p, pixel_data, telemetry_data, &done);
 	if (done != 1)
 		return;
 

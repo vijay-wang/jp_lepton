@@ -58,7 +58,7 @@ int init_lepton_info(lepton_vospi_info *lep_info, lepton_version lep_version, te
 			/* Each subframe contains 3 additional lines of telemetry (SPI xfer
 			 * size).
 			 */
-			lep_info->subframe_params.subframe_data_byte_size += LEPTON2_TELEMETRY_SUBFRAME_SIZE;
+			lep_info->subframe_params.subframe_data_byte_size += LEPTON2_TELEMETRY_SIZE;
 			lep_info->subframe_params.line_count += LEPTON2_TELEMETRY_LINE_HEIGHT;
 		} else {
 			/* each subframe contains 1 additional line of telemetry (SPI xfer
@@ -84,7 +84,7 @@ int is_subframe_line_counter_valid(lepton_vospi_info *lep_info, unsigned short *
 
 	if (lep_info->telemetry_loc != TELEMETRY_OFF) {
 		if (lep_info->lep_version == LEPTON_VERSION_2X) {
-			last_line_no += LEPTON2_TELEMETRY_SUBFRAME_LINE_HEIGHT;
+			last_line_no += LEPTON2_TELEMETRY_LINE_HEIGHT;
 		} else {
 			last_line_no += LEPTON3_SUBFRAME_EXTRA_LINE_HEIGHT;
 		}
@@ -230,6 +230,118 @@ int extract_pixel_data(lepton_vospi_info *lep_info, unsigned short *received_fra
 	} else if (subframe_index == 4) {
 		*done = 1;
 		lep_info->next_pixel_line_offset = 0;
+	}
+
+	return linecount_errs;
+}
+
+int extract_data(lepton_vospi_info *lep_info, unsigned short *received_frame, unsigned short *pixel_data,
+		unsigned short *telemetry_data, int *done)
+{
+	int first_pixel_line = 0;
+	int last_pixel_line = 0;
+	int first_telemetry_line = 0;
+	int last_telemetry_line = 0;
+	unsigned char *subframe_line = NULL;
+	unsigned int lep2_frame_crc_sum = 0;
+	int linecount_errs = 0;
+	int subframe_index = 0;
+	int subframe_offset = 0;
+
+	int i;
+
+	if (lep_info->lep_version == LEPTON_VERSION_2X) {
+		/* Every subframe is also a full frame */
+		if (lep_info->telemetry_loc == TELEMETRY_AT_START) {
+			/* Pixel data starts following the telemetry lines */
+			first_pixel_line = LEPTON2_TELEMETRY_LINE_HEIGHT;
+			first_telemetry_line = 0;
+			last_telemetry_line = LEPTON2_TELEMETRY_LINE_HEIGHT;
+		} else if (lep_info->telemetry_loc == TELEMETRY_AT_END) {
+			first_telemetry_line = LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
+			last_telemetry_line = LEPTON_SUBFRAME_DATA_LINE_HEIGHT + LEPTON2_TELEMETRY_LINE_HEIGHT;
+		}
+
+		last_pixel_line = LEPTON_SUBFRAME_DATA_LINE_HEIGHT + first_pixel_line;
+	} else {
+		/* Lepton 3.X: Caller is responsible for making sure to synchronize on
+		 * subframe index 1 (1-based counter).
+		 */
+		subframe_index = get_subframe_index_from_subframe(received_frame);
+
+		if (lep_info->telemetry_loc == TELEMETRY_OFF) {
+			/* Each subframe is a stripe from the overall image (each stripe is
+			 * 1/2 the subframe height)
+			 */
+			subframe_offset = ((subframe_index - 1) * (LEPTON_SUBFRAME_DATA_LINE_HEIGHT / 2)) *
+								lep_info->image_params.pixel_width;
+
+			first_pixel_line = 0;
+			last_pixel_line = LEPTON_SUBFRAME_DATA_LINE_HEIGHT;
+		} else {
+			first_pixel_line = 0;
+			last_pixel_line = LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT;
+		}
+
+		if (lep_info->telemetry_loc == TELEMETRY_AT_START && subframe_index == 1) {
+			first_pixel_line = LEPTON3_TELEMETRY_LINE_HEIGHT;
+			first_telemetry_line = 0;
+			last_telemetry_line = LEPTON3_TELEMETRY_LINE_HEIGHT;
+		}
+
+		if (lep_info->telemetry_loc == TELEMETRY_AT_END&& subframe_index == 4) {
+			last_pixel_line = LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT - LEPTON3_TELEMETRY_LINE_HEIGHT;
+			first_telemetry_line = LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT - LEPTON3_TELEMETRY_LINE_HEIGHT;
+			last_telemetry_line = LEPTON3_TELEMETRY_SUBFRAME_LINE_HEIGHT;
+		}
+	}
+
+	for (i = first_telemetry_line; i < last_telemetry_line; i++) {
+		subframe_line = get_line_from_subframe(received_frame, i);
+
+		if (subframe_line[1] != i)
+			linecount_errs++;
+
+		if (lep_info->lep_version == LEPTON_VERSION_2X)
+			lep2_frame_crc_sum += ((unsigned short *)subframe_line)[1];
+
+		subframe_line += 4;
+		memcpy((unsigned char *)&telemetry_data[lep_info->next_telemetry_line_offset], subframe_line,
+			LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2);
+
+		lep_info->next_telemetry_line_offset += LEPTON_SUBFRAME_LINE_PIXEL_WIDTH;
+	}
+
+	for (i = first_pixel_line; i < last_pixel_line; i++) {
+		/* NOTE: Each pair of lines in a Lepton 3.X subframe is one row of the
+		 * image.
+		 */
+		subframe_line = get_line_from_subframe(received_frame, i);
+
+		if (subframe_line[1] != i)
+			linecount_errs++;
+
+		if (lep_info->lep_version == LEPTON_VERSION_2X)
+			lep2_frame_crc_sum += ((unsigned short *)subframe_line)[1];
+
+		/* Skip over line counter and CRC bytes */
+		subframe_line += 4;
+		memcpy((unsigned char *)&pixel_data[lep_info->next_pixel_line_offset], subframe_line,
+			LEPTON_SUBFRAME_LINE_PIXEL_WIDTH * 2);
+
+		lep_info->next_pixel_line_offset += LEPTON_SUBFRAME_LINE_PIXEL_WIDTH;
+	}
+
+	if ((subframe_index == 0) && (lep2_frame_crc_sum != lep_info->last_crc_sum)) {
+		/* This Lepton 2.X frame isn't a duplicate, so pass it on */
+		lep_info->last_crc_sum = lep2_frame_crc_sum;
+		*done = 1;
+		lep_info->next_pixel_line_offset = 0;
+		lep_info->next_telemetry_line_offset = 0;
+	} else if (subframe_index == 4) {
+		*done = 1;
+		lep_info->next_pixel_line_offset = 0;
+		lep_info->next_telemetry_line_offset = 0;
 	}
 
 	return linecount_errs;

@@ -156,5 +156,6 @@ response:
 	shmq_close_dev(shmq_fd);
 
 	lepton_i2c_close(&ctx);
+	pr_info("Exit lepton_controller\n");
 	return 0;
 }
