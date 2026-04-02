@@ -66,6 +66,8 @@ extern "C" {
 		sdk_pixel_fmt_t  pixel_fmt;
 		uint8_t         *pixel_data;    /* width * height * bpp bytes   */
 		size_t           pixel_data_len;
+		uint8_t         *reserved_data;
+		size_t           reserved_data_len;
 		uint64_t         timestamp;     /* from outer frame             */
 		uint64_t         img_timestamp;     /* from image frame         */
 

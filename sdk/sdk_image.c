@@ -200,6 +200,9 @@ void sdk_image_module_destroy(sdk_image_module_t *mod)
 	for (i = 0; i < mod->depth; i++) {
 		if (mod->slots[i].buf.pixel_data)
 			free(mod->slots[i].buf.pixel_data);
+
+		if (mod->slots[i].buf.reserved_data)
+			free(mod->slots[i].buf.reserved_data);
 	}
 
 #ifdef _WIN32
@@ -282,6 +285,13 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
 		slot->buf.pixel_data_len = 0;
 	}
 
+	/* Free old reserved data if size differs */
+	if (slot->buf.reserved_data && slot->buf.reserved_data_len != reserved_bytes) {
+		free(slot->buf.reserved_data);
+		slot->buf.reserved_data     = NULL;
+		slot->buf.reserved_data_len = 0;
+	}
+
 	/* Allocate if needed */
 	if (!slot->buf.pixel_data) {
 		slot->buf.pixel_data = (uint8_t *)malloc(pixel_bytes);
@@ -292,10 +302,22 @@ int sdk_image_push(sdk_image_module_t *mod, const uint8_t *payload,
 		slot->buf.pixel_data_len = pixel_bytes;
 	}
 
+	/* Allocate if needed */
+	if (!slot->buf.reserved_data) {
+		slot->buf.reserved_data = (uint8_t *)malloc(reserved_bytes);
+		if (!slot->buf.reserved_data) {
+			mod_unlock(mod);
+			return -1;
+		}
+		slot->buf.reserved_data_len = reserved_bytes;
+	}
+
 	/* Copy pixel data (skip reserved bytes) */
 	memcpy(slot->buf.pixel_data,
-			payload + IMG_HDR_FIXED + reserved_bytes,
-			pixel_bytes);
+			payload + IMG_HDR_FIXED + reserved_bytes, pixel_bytes);
+
+	/* Copy reserved data */
+	memcpy(slot->buf.reserved_data, payload + IMG_HDR_FIXED, reserved_bytes);
 
 	slot->buf.width      = w;
 	slot->buf.height     = h;
