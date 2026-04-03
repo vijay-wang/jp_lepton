@@ -150,8 +150,7 @@ static void process_image(const void *p, int size)
 	if (is_subframe_index_valid(&lep_info, (unsigned short *)p) == 0)
 		return;
 
-	// if (pixel_data == NULL && telemetry_data = NULL) {
-	if (pixel_data == NULL) {
+	if (pixel_data == NULL && telemetry_data == NULL) {
 		ret = ioctl(fd_q, SHMQ_IOC_GET_FREE, &d);
 		if (ret < 0) {
 			pr_info("SHMQ_IOC_GET_FREE failed, errno:%d\n", errno);
@@ -271,9 +270,7 @@ static int read_frame(void)
 			/* RLC - in case of data corruption, skip this buffer
 			* and move on to the next.
 			*/
-			fflush(stderr);
-			pr_err("!");
-			fflush(stdout);
+			pr_err("IO_METHOD_MMAP failed, error:%x\n", buf.flags & V4L2_BUF_FLAG_ERROR);
 			return 0;
 		}
 

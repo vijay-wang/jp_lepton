@@ -124,6 +124,36 @@ PERF_MEASURE_US(elapsed,
 
 	pr_debug("LEP_SetSysShutterPosition elapsed time: %ld us\n", (uint64_t)elapsed);
 
+	/* turn on telemetry data, this operation must be ealier than strating stream */
+	result = LEP_SetSysTelemetryLocation(&portDesc, LEP_TELEMETRY_LOCATION_HEADER);
+	if (result != LEP_OK) {
+		pr_err("LEP_SetSysTelemetryLocation failed\n");
+		goto cci_ops_failed;
+	}
+
+	LEP_SYS_TELEMETRY_LOCATION_E telemetry_loc;
+	result = LEP_GetSysTelemetryLocation(&portDesc, &telemetry_loc);
+	if (result != LEP_OK) {
+		pr_err("LEP_GetSysTelemetryLocation failed\n");
+		goto cci_ops_failed;
+	}
+
+	pr_debug("LEP_GetSysTelemetryLocation telemetry_loc = %d\n", telemetry_loc);
+
+	result = LEP_SetSysTelemetryEnableState(&portDesc, LEP_TELEMETRY_ENABLED);
+	if (result != LEP_OK) {
+		pr_err("LEP_SetSysTelemetryEnableState failed\n");
+		goto cci_ops_failed;
+	}
+
+	LEP_SYS_TELEMETRY_ENABLE_STATE_E telemetry_status;
+	result = LEP_GetSysTelemetryEnableState(&portDesc, &telemetry_status);
+	if (result != LEP_OK) {
+		pr_err("LEP_GetSysTelemetryEnableState failed\n");
+		goto cci_ops_failed;
+	}
+
+	pr_debug("LEP_GetSysTelemetryEnableState telemetry_status = %d\n", telemetry_status);
 
 	/* enable vsync signal, and then the image streaming will start */
 	gpio_mode = LEP_OEM_END_GPIO_MODE;
@@ -159,7 +189,21 @@ PERF_MEASURE_US(elapsed,
 
 		print_beijing_time(buf->timestamp);
 		print_beijing_time(buf->img_timestamp);
+		uint8_t *telemetry_data = buf->reserved_data + 160 * 2 * 2;
+		pr_info("major:%d, minor:%d\n", telemetry_data[1], telemetry_data[0]);
 
+		uint32_t time_counter = ((uint32_t)telemetry_data[4] << 24) |
+			((uint32_t)telemetry_data[5] << 16) |
+			((uint32_t)telemetry_data[2] << 8)  |
+			(uint32_t)telemetry_data[3];
+		pr_info("time counter:%u\n", time_counter);
+
+		telemetry_data += 40;
+		uint32_t frame_counter = ((uint32_t)telemetry_data[2] << 24) |
+			((uint32_t)telemetry_data[3] << 16) |
+			((uint32_t)telemetry_data[0] << 8)  |
+			(uint32_t)telemetry_data[1];
+		pr_info("frame counter:%u\n", frame_counter);
 		sdk_release_image(h, buf);
 	}
 
