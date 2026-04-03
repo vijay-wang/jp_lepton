@@ -7,6 +7,12 @@
 #include "LEPTON_OEM.h"
 #include "log.h"
 #include "perf_tick.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/fb.h>
+
 
 #define SERVER_IP_DEFAULT   "192.168.21.2"
 #define SERVER_PORT_DEFAULT 8080
@@ -32,6 +38,149 @@ void print_beijing_time(long long timestamp_us)
 			microseconds, timestamp_us);
 }
 
+/**
+ * y16_minmax() - find minimum and maximum Y16 values in a frame
+ * @buf:    pointer to Y16 buffer
+ * @pixels: number of pixels
+ * @min:    output minimum value
+ * @max:    output maximum value
+ */
+static void y16_minmax(const uint16_t *buf, unsigned int pixels,
+		       uint16_t *min, uint16_t *max)
+{
+	unsigned int i;
+	uint16_t lo = buf[0];
+	uint16_t hi = buf[0];
+
+	for (i = 1; i < pixels; i++) {
+		if (buf[i] < lo)
+			lo = buf[i];
+		if (buf[i] > hi)
+			hi = buf[i];
+	}
+
+	*min = lo;
+	*max = hi;
+}
+
+/**
+ * y16_to_rgb() - convert Y16 thermal buffer to ARGB8888 with iron colormap
+ * @y16:     input Y16 buffer
+ * @rgb:     output ARGB8888 buffer
+ * @pixels:  number of pixels to convert
+ * @y16_min: minimum Y16 value in this frame
+ * @y16_max: maximum Y16 value in this frame
+ *
+ * Applies an iron colormap:
+ *   0x00-0x3F: black  -> blue
+ *   0x40-0x7F: blue   -> red
+ *   0x80-0xBF: red    -> yellow
+ *   0xC0-0xFF: yellow -> white
+ */
+static void y16_to_rgb(const uint16_t *y16, uint32_t *rgb,
+		       unsigned int pixels,
+		       uint16_t y16_min, uint16_t y16_max)
+{
+	unsigned int i;
+	uint32_t range = y16_max - y16_min;
+
+	if (range == 0)
+		range = 1;
+
+	for (i = 0; i < pixels; i++) {
+		uint32_t val = y16[i];
+		uint8_t r, g, b;
+		uint32_t norm;
+
+		if (val < y16_min)
+			val = y16_min;
+		else if (val > y16_max)
+			val = y16_max;
+
+		norm = (val - y16_min) * 255 / range;
+
+		if (norm < 64) {
+			r = 0;
+			g = 0;
+			b = (uint8_t)(norm * 4);
+		} else if (norm < 128) {
+			r = (uint8_t)((norm - 64) * 4);
+			g = 0;
+			b = 255;
+		} else if (norm < 192) {
+			r = 255;
+			g = (uint8_t)((norm - 128) * 4);
+			b = (uint8_t)(255 - (norm - 128) * 4);
+		} else {
+			r = 255;
+			g = 255;
+			b = (uint8_t)((norm - 192) * 4);
+		}
+
+		rgb[i] = (0xFFu << 24) | ((uint32_t)r << 16) |
+			 ((uint32_t)g << 8) | b;
+	}
+}
+
+/**
+ * blit_to_fb() - scale and blit ARGB8888 buffer to framebuffer
+ * @fb_ptr:  mmap'd framebuffer pointer
+ * @vinfo:   framebuffer variable screen info
+ * @finfo:   framebuffer fixed screen info
+ * @src:     source ARGB8888 buffer
+ * @src_w:   source width in pixels
+ * @src_h:   source height in pixels
+ *
+ * Nearest-neighbour scaling to fill the framebuffer display area.
+ * Supports 32bpp framebuffers only.
+ */
+static void blit_to_fb(uint8_t *fb_ptr,
+		       const struct fb_var_screeninfo *vinfo,
+		       const struct fb_fix_screeninfo *finfo,
+		       const uint32_t *src,
+		       unsigned int src_w, unsigned int src_h)
+{
+	unsigned int x, y;
+	unsigned int dst_w = vinfo->xres;
+	unsigned int dst_h = vinfo->yres;
+
+	for (y = 0; y < dst_h; y++) {
+		unsigned int src_y = y * src_h / dst_h;
+
+		for (x = 0; x < dst_w; x++) {
+			unsigned int src_x = x * src_w / dst_w;
+			uint32_t pixel = src[src_y * src_w + src_x];
+			unsigned int offset = y * finfo->line_length +
+					      x * (vinfo->bits_per_pixel / 8);
+
+			*(uint32_t *)(fb_ptr + offset) = pixel;
+		}
+	}
+}
+
+/**
+ * lepton_fb_display() - convert one Y16 frame and display it on the framebuffer
+ * @fb_ptr:  mmap'd framebuffer pointer
+ * @vinfo:   framebuffer variable screen info
+ * @finfo:   framebuffer fixed screen info
+ * @y16:     input Y16 frame buffer
+ * @width:   frame width in pixels
+ * @height:  frame height in pixels
+ * @rgb:     temporary ARGB8888 working buffer (width * height * 4 bytes)
+ */
+static void lepton_fb_display(uint8_t *fb_ptr,
+			      const struct fb_var_screeninfo *vinfo,
+			      const struct fb_fix_screeninfo *finfo,
+			      const uint16_t *y16,
+			      unsigned int width, unsigned int height,
+			      uint32_t *rgb)
+{
+	uint16_t y16_min, y16_max;
+
+	y16_minmax(y16, width * height, &y16_min, &y16_max);
+	y16_to_rgb(y16, rgb, width * height, y16_min, y16_max);
+	blit_to_fb(fb_ptr, vinfo, finfo, rgb, width, height);
+}
 
 int main(int argc, char *argv[])
 {
@@ -40,6 +189,12 @@ int main(int argc, char *argv[])
 	LEP_SDK_VERSION_T version;
 	LEP_OEM_GPIO_MODE_E gpio_mode;
 	uint64_t elapsed;
+	uint32_t *rgb_buf;
+	int fb_fd;
+	struct fb_var_screeninfo vinfo;
+	struct fb_fix_screeninfo finfo;
+	uint8_t *fb_ptr;
+	size_t fb_size;
 
 	sdk_handle_t *h;
 	sdk_err_t     err;
@@ -179,7 +334,41 @@ PERF_MEASURE_US(elapsed,
 	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
-	for (int i = 0; i < 100; ++i) {
+	fb_fd = open("/dev/fb0", O_RDWR);
+	if (fb_fd < 0) {
+		perror("open /dev/fb0");
+		goto err_free;
+	}
+
+		if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &vinfo) < 0) {
+		perror("ioctl FBIOGET_VSCREENINFO");
+		goto err_close;
+	}
+
+	if (ioctl(fb_fd, FBIOGET_FSCREENINFO, &finfo) < 0) {
+		perror("ioctl FBIOGET_FSCREENINFO");
+		goto err_close;
+	}
+
+	if (vinfo.bits_per_pixel != 32) {
+		fprintf(stderr, "unsupported bpp: %u (require 32)\n",
+			vinfo.bits_per_pixel);
+		goto err_close;
+	}
+
+	fb_size = finfo.line_length * vinfo.yres;
+	fb_ptr = mmap(NULL, fb_size, PROT_READ | PROT_WRITE,
+		      MAP_SHARED, fb_fd, 0);
+	if (fb_ptr == MAP_FAILED) {
+		perror("mmap framebuffer");
+		goto err_close;
+	}
+
+	printf("framebuffer: %ux%u %ubpp line_length=%u\n",
+	       vinfo.xres, vinfo.yres,
+	       vinfo.bits_per_pixel, finfo.line_length);
+
+	for (int i = 0; i < 10000000; ++i) {
 		sdk_image_buf_t *buf = sdk_recv_image(h, 120);
 
 		if (buf == NULL) {
@@ -204,8 +393,19 @@ PERF_MEASURE_US(elapsed,
 			((uint32_t)telemetry_data[0] << 8)  |
 			(uint32_t)telemetry_data[1];
 		pr_info("frame counter:%u\n", frame_counter);
+		if (rgb_buf == NULL)
+			rgb_buf = malloc(buf->width * buf->height * sizeof(uint32_t));
+		// lepton_fb_display(fb_ptr, &vinfo, &finfo, (uint16_t *)buf->pixel_data, buf->width, buf->height, rgb_buf);
 		sdk_release_image(h, buf);
 	}
+
+	munmap(fb_ptr, fb_size);
+err_close:
+	close(fb_fd);
+err_free:
+	if (rgb_buf)
+		free(rgb_buf);
+	rgb_buf = NULL;
 
 	// /* disable vsync signal, and the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
