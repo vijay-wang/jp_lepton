@@ -24,6 +24,7 @@
 #include <string.h>
 #include <signal.h>
 #include <linux/videodev2.h>
+#include <arm_neon.h>
 #include "lepton_vospi_funcs.h"
 #include "shmq.h"
 #include "log.h"
@@ -131,6 +132,22 @@ static uint8_t max_pixel_size(pixel_size_arry map, int map_len)
 	return max;
 }
 
+static inline void swab16_buffer(uint16_t *buf, unsigned int words)
+{
+	unsigned int i = 0;
+	unsigned int neon_count = words & ~7U;
+
+	for (i = 0; i < neon_count; i += 8) {
+		uint8x16_t v = vld1q_u8((uint8_t *)(buf + i));
+		v = vrev16q_u8(v);
+		vst1q_u8((uint8_t *)(buf + i), v);
+	}
+
+	for (; i < words; i++) {
+		buf[i] = (buf[i] << 8) | (buf[i] >> 8);
+	}
+}
+
 static void process_image(const void *p, int size)
 {
 	FILE *out_file = NULL;
@@ -174,6 +191,7 @@ static void process_image(const void *p, int size)
 	if (done != 1)
 		return;
 
+	swab16_buffer(pixel_data, pixels_len / 2);
 	/* if true, save image data to file */
 	if (to_file && frame_number < frame_count)
 	{
