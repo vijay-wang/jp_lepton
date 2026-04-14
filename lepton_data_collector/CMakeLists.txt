@@ -8,6 +8,7 @@ add_executable(lepton_data_collector ${CURRENT_SOURCES} $<TARGET_OBJECTS:shmq_ob
 target_include_directories(lepton_data_collector PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${SHMQ_DIR}
+        ${SDK_DIR}
 	${LOG_DIR}
 	)
 

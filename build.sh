@@ -18,7 +18,7 @@ cmake	-DBUILD_LEPTON_DATA_COLLECTOR=ON \
 	-DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
 	-DCMAKE_INSTALL_PREFIX=./output -DCMAKE_BUILD_TYPE="Debug" ..
 
-make
+make -j12
 make install
 
 cd -
@@ -28,5 +28,5 @@ cmake	-DBUILD_SDK=ON \
 	-DBUILD_DEMO=ON \
 	-DCMAKE_INSTALL_PREFIX=./sdk_output -DCMAKE_BUILD_TYPE="Debug" ..
 
-make
+make -j12
 make install

@@ -24,6 +24,9 @@ target_include_directories(net_objects PRIVATE ${NET_DIR} ${LOG_DIR})
 
 file(GLOB SDK_SOURCES "${SDK_DIR}/*.c")
 add_library(sdk_objects OBJECT ${SDK_SOURCES})
+set_target_properties(sdk_objects PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	)
 target_include_directories(sdk_objects PRIVATE ${SDK_DIR} ${LOG_DIR})
 
 if(UNIX)
