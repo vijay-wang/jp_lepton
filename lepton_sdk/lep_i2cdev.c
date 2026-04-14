@@ -1,21 +1,21 @@
 // Lepton I2C user-space control
 // lep_i2cdev.c
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <linux/types.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-
 #include "LEPTON_Types.h"
 #include "LEPTON_ErrorCodes.h"
 #include "LEPTON_Macros.h"
 #include "LEPTON_I2C_Reg.h"
 
+#if defined(__linux__)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <linux/types.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 #include "lep_i2cdev.h"
 #include "log.h"
 
@@ -129,4 +129,25 @@ int i2cdev_write_byte_data(LEP_UINT8 *tx_data, LEP_UINT32 tx_size)
 	}
 	return write_count;
 }
+#else
 
+int i2cdev_init(void)
+{
+	return 0;
+}
+
+void i2cdev_close(void)
+{
+}
+
+int i2cdev_read_byte_data(LEP_UINT8 *rx_adr, LEP_UINT8 *rx_data, LEP_UINT32 rx_size)
+{
+	return 0;
+}
+
+int i2cdev_write_byte_data(LEP_UINT8 *tx_data, LEP_UINT32 tx_size)
+{
+	return 0;
+}
+
+#endif

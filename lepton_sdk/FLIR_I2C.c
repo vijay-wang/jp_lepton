@@ -63,10 +63,6 @@
 #include "sdk.h"
 #include "sdk_cmd.h"
 
-/* FTDI Includes */
-#include "ftd2xx.h"
-#include "libMPSSE_i2c.h"
-
 /* TCP IP Socket Includes */
 #if defined(WINDOWSS) || defined(WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -119,8 +115,6 @@ LEP_CMD_PACKET_T cmdPacket;
 LEP_RESPONSE_PACKET_T responsePacket;
 
 #if defined(WINDOWSS) || defined(WIN32)
-FT_HANDLE ftHandle;
-FT_STATUS status;
 
 SOCKET ConnectSocket = INVALID_SOCKET;
 WSADATA wsaData;
@@ -211,12 +205,8 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 	int numAardvarkConnected = 0;
 	LEP_UINT16 numFreeDevices;
 #if defined(WINDOWSS) || defined(WIN32)
-	FT_STATUS status;
-	ChannelConfig channelConf;
-	uint32 channels;
 	int i;
 	int res;
-	FT_DEVICE_LIST_INFO_NODE devList;
 
 	unsigned long nonBlockMode = 1;
 	fd_set Write, fdErr;
@@ -230,34 +220,6 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
-
-
-			Init_libMPSSE();
-			channelConf.ClockRate = I2C_CLOCK_FAST_MODE;
-			channelConf.LatencyTimer = 0;
-			channelConf.Options = 0;
-
-			result = LEP_ERROR_CREATING_COMM;
-
-			status = I2C_GetNumChannels(&channels);
-			if (channels > 0)
-			{
-
-				for (i = 0; i < channels; i++)
-				{
-					status = I2C_GetChannelInfo(i, &devList);
-					if (strcmp(FTDI_DEVICE_STRING, devList.Description) == 0)
-					{
-						status = I2C_OpenChannel(i, &ftHandle);
-						status = I2C_InitChannel(ftHandle, &channelConf);
-						result = LEP_OK;
-
-						break;
-					}
-				}
-			}
-
-			break;
 		case TCP_IP:
 			closesocket(ConnectSocket);
 
@@ -378,7 +340,6 @@ LEP_RESULT DEV_I2C_MasterClose(void)
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
-			I2C_CloseChannel(ftHandle);
 			break;
 		case TCP_IP:
 			closesocket(ConnectSocket);
@@ -470,25 +431,6 @@ LEP_RESULT DEV_I2C_MasterReadData(LEP_UINT16  portID,               // User-defi
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
-
-
-			/*
-			   Write the address, which is 2 bytes
-			   */
-			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, ADDRESS_SIZE_BYTES, (uint8 *)txdata, (uint32 *)&bytesActuallyWritten, 0x1d);
-
-			/*
-			   Read back the data at the address written above
-			   */
-			ftdiStatus = I2C_DeviceRead(ftHandle, (uint32)deviceAddress, (uint32)bytesToRead, (uint8 *)rxdata, (uint32 *)&bytesActuallyRead, 0x19);
-
-			ftdiStatus = 0;
-			bytesActuallyRead = bytesToRead;
-
-			if (ftdiStatus != 0 || bytesActuallyRead != bytesToRead)
-			{
-				result = LEP_ERROR;
-			}
 			break;
 		case TCP_IP:
 
@@ -629,13 +571,6 @@ LEP_RESULT DEV_I2C_MasterWriteData(LEP_UINT16  portID,              // User-defi
 	{
 #if defined(WINDOWSS) || defined(WIN32)
 		case DEV_BOARD_FTDI_V2:
-
-			ftdiStatus = I2C_DeviceWrite(ftHandle, (uint32)deviceAddress, bytesToWrite, (uint8 *)txdata, (uint32 *)&bytesActuallyWritten, 0x13);
-
-			if (ftdiStatus != 0 || bytesActuallyWritten != bytesToWrite)
-			{
-				result = LEP_ERROR;
-			}
 			break;
 		case TCP_IP:
 			memcpy(cmdPacket.data, txdata, bytesToWrite);

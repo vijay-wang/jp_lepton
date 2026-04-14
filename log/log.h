@@ -36,8 +36,20 @@
 #include <string.h>
 #include <time.h>
 
-#if !defined(_WIN32) || !defined(_WIN64)
-#include <sys/time.h>
+#if defined(__linux__)
+	#include <sys/time.h>
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
+
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
+
+	#include <windows.h>
 #endif
 
 /*

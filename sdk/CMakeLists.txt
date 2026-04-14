@@ -10,7 +10,6 @@ add_library(sdk_static STATIC ${CURRENT_SOURCES} $<TARGET_OBJECTS:net_objects>)
 
 target_include_directories(sdk_static PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}
-	${SHMQ_DIR}
 	${SDK_DIR}
 	${NET_DIR}
 	${LOG_DIR}
@@ -36,7 +35,7 @@ set_target_properties(sdk_shared PROPERTIES
 
 if(WIN32)
 	set_target_properties(sdk_shared PROPERTIES
-		ARCHIVE_OUTPUT_NAME "sdk.dll"
+		ARCHIVE_OUTPUT_NAME "sdk"
 		RUNTIME_OUTPUT_NAME "sdk"
 		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"

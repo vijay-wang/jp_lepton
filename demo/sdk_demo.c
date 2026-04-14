@@ -7,14 +7,16 @@
 #include "LEPTON_OEM.h"
 #include "log.h"
 #include "perf_tick.h"
+#if defined (__linux__)
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <linux/fb.h>
+#endif
 
 
-#define SERVER_IP_DEFAULT   "192.168.21.2"
+#define SERVER_IP_DEFAULT   "192.168.21.180"
 #define SERVER_PORT_DEFAULT 8080
 
 static const char *g_ip;
@@ -122,6 +124,7 @@ static void y16_to_rgb(const uint16_t *y16, uint32_t *rgb,
 	}
 }
 
+#if defined (__linux__)
 /**
  * blit_to_fb() - scale and blit ARGB8888 buffer to framebuffer
  * @fb_ptr:  mmap'd framebuffer pointer
@@ -181,6 +184,7 @@ static void lepton_fb_display(uint8_t *fb_ptr,
 	y16_to_rgb(y16, rgb, width * height, y16_min, y16_max);
 	blit_to_fb(fb_ptr, vinfo, finfo, rgb, width, height);
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -190,11 +194,13 @@ int main(int argc, char *argv[])
 	LEP_OEM_GPIO_MODE_E gpio_mode;
 	uint64_t elapsed;
 	uint32_t *rgb_buf;
+#if defined (__linux__)
 	int fb_fd;
 	struct fb_var_screeninfo vinfo;
 	struct fb_fix_screeninfo finfo;
 	uint8_t *fb_ptr;
 	size_t fb_size;
+#endif
 
 	sdk_handle_t *h;
 	sdk_err_t     err;
@@ -334,6 +340,7 @@ PERF_MEASURE_US(elapsed,
 	}
 	pr_info("LEP_GetOemGpioMode gpio_mode = %d result = %d.\n", gpio_mode, result);
 
+#if defined (__linux__)
 	fb_fd = open("/dev/fb0", O_RDWR);
 	if (fb_fd < 0) {
 		perror("open /dev/fb0");
@@ -367,6 +374,7 @@ PERF_MEASURE_US(elapsed,
 	printf("framebuffer: %ux%u %ubpp line_length=%u\n",
 	       vinfo.xres, vinfo.yres,
 	       vinfo.bits_per_pixel, finfo.line_length);
+#endif
 
 	for (int i = 0; i < 10000000; ++i) {
 		sdk_image_buf_t *buf = sdk_recv_image(h, 120);
@@ -393,12 +401,15 @@ PERF_MEASURE_US(elapsed,
 			((uint32_t)telemetry_data[0] << 8)  |
 			(uint32_t)telemetry_data[1];
 		pr_info("frame counter:%u\n", frame_counter);
+#if defined (__linux__)
 		if (rgb_buf == NULL)
 			rgb_buf = malloc(buf->width * buf->height * sizeof(uint32_t));
-		// lepton_fb_display(fb_ptr, &vinfo, &finfo, (uint16_t *)buf->pixel_data, buf->width, buf->height, rgb_buf);
+		lepton_fb_display(fb_ptr, &vinfo, &finfo, (uint16_t *)buf->pixel_data, buf->width, buf->height, rgb_buf);
+#endif
 		sdk_release_image(h, buf);
 	}
 
+#if defined (__linux__)
 	munmap(fb_ptr, fb_size);
 err_close:
 	close(fb_fd);
@@ -406,6 +417,7 @@ err_free:
 	if (rgb_buf)
 		free(rgb_buf);
 	rgb_buf = NULL;
+#endif
 
 	// /* disable vsync signal, and the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
