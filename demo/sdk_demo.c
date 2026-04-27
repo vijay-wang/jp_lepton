@@ -16,9 +16,11 @@
 #endif
 
 
-#define SERVER_IP_DEFAULT   "192.168.21.180"
+#define SERVER_IP_DEFAULT   "192.168.20.251"
 #define SERVER_PORT_DEFAULT 8080
 
+static int display = 0;
+static int model = 2;
 static const char *g_ip;
 static uint16_t    g_port;
 void print_beijing_time(long long timestamp_us)
@@ -208,6 +210,8 @@ int main(int argc, char *argv[])
 	g_ip     = (argc >= 2) ? argv[1] : SERVER_IP_DEFAULT;
 	g_port   = (argc >= 3) ? (uint16_t)atoi(argv[2])
 		: (uint16_t)SERVER_PORT_DEFAULT;
+	display = (argc >= 4) ? 1 : display;
+	model	= (argc >= 5) ? 2 : model;
 
 
 	h = sdk_create(NULL);
@@ -226,7 +230,7 @@ int main(int argc, char *argv[])
 #define TEST_BUF_SIZE (4 * 1024 * 1024)
 	uint8_t *wr_file_buf = (uint8_t *)malloc(TEST_BUF_SIZE);
 
-	err = sdk_send_file(h, "/tmp/test.txt", wr_file_buf, TEST_BUF_SIZE, 300);
+	err = sdk_send_file(h, "/tmp/test.txt", wr_file_buf, TEST_BUF_SIZE, 2000);
 	if (err != SDK_OK)
 		pr_err("Upload file failed, %s\n", sdk_strerror(err));
 	else
@@ -384,27 +388,38 @@ PERF_MEASURE_US(elapsed,
 			continue;
 		}
 
-		print_beijing_time(buf->timestamp);
-		print_beijing_time(buf->img_timestamp);
-		uint8_t *telemetry_data = buf->reserved_data + 160 * 2 * 2;
-		pr_info("major:%d, minor:%d\n", telemetry_data[1], telemetry_data[0]);
+		if (!display) {
+			uint8_t *telemetry_data;
+			print_beijing_time(buf->timestamp);
+			print_beijing_time(buf->img_timestamp);
 
-		uint32_t time_counter = ((uint32_t)telemetry_data[4] << 24) |
-			((uint32_t)telemetry_data[5] << 16) |
-			((uint32_t)telemetry_data[2] << 8)  |
-			(uint32_t)telemetry_data[3];
-		pr_info("time counter:%u\n", time_counter);
+			if (model == 3)
+				telemetry_data = buf->reserved_data + 160 * 2 * 2; /* offset of telemetry data in reserved for lepton3x */
+			else if (model == 2)
+				telemetry_data = buf->reserved_data + 80 * 2 * 1; /* offset of telemetry data in reserved for lepton2.5 */
 
-		telemetry_data += 40;
-		uint32_t frame_counter = ((uint32_t)telemetry_data[2] << 24) |
-			((uint32_t)telemetry_data[3] << 16) |
-			((uint32_t)telemetry_data[0] << 8)  |
-			(uint32_t)telemetry_data[1];
-		pr_info("frame counter:%u\n", frame_counter);
+			pr_info("major:%d, minor:%d\n", telemetry_data[1], telemetry_data[0]);
+
+			uint32_t time_counter = ((uint32_t)telemetry_data[4] << 24) |
+				((uint32_t)telemetry_data[5] << 16) |
+				((uint32_t)telemetry_data[2] << 8)  |
+				(uint32_t)telemetry_data[3];
+			pr_info("time counter:%u\n", time_counter);
+
+			telemetry_data += 40;
+			uint32_t frame_counter = ((uint32_t)telemetry_data[2] << 24) |
+				((uint32_t)telemetry_data[3] << 16) |
+				((uint32_t)telemetry_data[0] << 8)  |
+				(uint32_t)telemetry_data[1];
+			pr_info("frame counter:%u\n", frame_counter);
+		}
+
 #if defined (__linux__)
 		if (rgb_buf == NULL)
 			rgb_buf = malloc(buf->width * buf->height * sizeof(uint32_t));
-		lepton_fb_display(fb_ptr, &vinfo, &finfo, (uint16_t *)buf->pixel_data, buf->width, buf->height, rgb_buf);
+
+		if (display)
+			lepton_fb_display(fb_ptr, &vinfo, &finfo, (uint16_t *)buf->pixel_data, buf->width, buf->height, rgb_buf);
 #endif
 		sdk_release_image(h, buf);
 	}

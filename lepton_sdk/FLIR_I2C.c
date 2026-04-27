@@ -213,7 +213,7 @@ LEP_RESULT DEV_I2C_MasterInit(LEP_UINT16 portID,
 	TIMEVAL socketTimeout;
 #endif
 
-	pr_err("You are here.  masterDevice is: %d\n", (int)masterDevice);
+	pr_debug("You are here.  masterDevice is: %d\n", (int)masterDevice);
 	/* Place Device-Specific Interface here
 	*/
 	switch (masterDevice)

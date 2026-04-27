@@ -284,6 +284,7 @@ static int read_frame(void)
 				errno_exit("VIDIOC_DQBUF");
 			}
 		}
+
 		if (buf.flags & V4L2_BUF_FLAG_ERROR) {
 			/* RLC - in case of data corruption, skip this buffer
 			* and move on to the next.
