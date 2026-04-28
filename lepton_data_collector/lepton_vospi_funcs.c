@@ -263,6 +263,8 @@ int extract_data(lepton_vospi_info *lep_info, unsigned short *received_frame, un
 		}
 
 		last_pixel_line = LEPTON_SUBFRAME_DATA_LINE_HEIGHT + first_pixel_line;
+		lep_info->next_pixel_line_offset = 0;
+		lep_info->next_telemetry_line_offset = 0;
 	} else {
 		/* Lepton 3.X: Caller is responsible for making sure to synchronize on
 		 * subframe index 1 (1-based counter).
@@ -336,8 +338,6 @@ int extract_data(lepton_vospi_info *lep_info, unsigned short *received_frame, un
 		/* This Lepton 2.X frame isn't a duplicate, so pass it on */
 		lep_info->last_crc_sum = lep2_frame_crc_sum;
 		*done = 1;
-		lep_info->next_pixel_line_offset = 0;
-		lep_info->next_telemetry_line_offset = 0;
 	} else if (subframe_index == 4) {
 		*done = 1;
 		lep_info->next_pixel_line_offset = 0;

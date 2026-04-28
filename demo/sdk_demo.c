@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <signal.h>
 #include "sdk.h"
 #include "LEPTON_SDK.h"
 #include "LEPTON_Types.h"
@@ -23,6 +25,8 @@ static int display = 0;
 static int model = 2;
 static const char *g_ip;
 static uint16_t    g_port;
+static int main_run = 0;
+
 void print_beijing_time(long long timestamp_us)
 {
 	time_t seconds = timestamp_us / 1000000;
@@ -188,6 +192,11 @@ static void lepton_fb_display(uint8_t *fb_ptr,
 }
 #endif
 
+static void sig_proc(int signo)
+{
+	main_run = 0;
+}
+
 int main(int argc, char *argv[])
 {
 	LEP_RESULT result;
@@ -195,7 +204,7 @@ int main(int argc, char *argv[])
 	LEP_SDK_VERSION_T version;
 	LEP_OEM_GPIO_MODE_E gpio_mode;
 	uint64_t elapsed;
-	uint32_t *rgb_buf;
+	uint32_t *rgb_buf = NULL;
 #if defined (__linux__)
 	int fb_fd;
 	struct fb_var_screeninfo vinfo;
@@ -210,9 +219,11 @@ int main(int argc, char *argv[])
 	g_ip     = (argc >= 2) ? argv[1] : SERVER_IP_DEFAULT;
 	g_port   = (argc >= 3) ? (uint16_t)atoi(argv[2])
 		: (uint16_t)SERVER_PORT_DEFAULT;
-	display = (argc >= 4) ? 1 : display;
+	display = (argc >= 4) ? atoi(argv[3]) : atoi(argv[3]);
 	model	= (argc >= 5) ? 2 : model;
 
+        signal(SIGINT, sig_proc);
+	signal(SIGTERM, sig_proc);
 
 	h = sdk_create(NULL);
 	if (h == NULL) {
@@ -380,7 +391,9 @@ PERF_MEASURE_US(elapsed,
 	       vinfo.bits_per_pixel, finfo.line_length);
 #endif
 
-	for (int i = 0; i < 10000000; ++i) {
+	main_run = 1;
+
+	for (int i = 0; i < 10000000 && main_run; ++i) {
 		sdk_image_buf_t *buf = sdk_recv_image(h, 120);
 
 		if (buf == NULL) {
@@ -434,7 +447,7 @@ err_free:
 	rgb_buf = NULL;
 #endif
 
-	// /* disable vsync signal, and the image streaming will stop */
+	/* disable vsync signal, and the image streaming will stop */
 	result = LEP_SetOemGpioMode(&portDesc, LEP_OEM_GPIO_MODE_GPIO);
 	if (result != LEP_OK) {
 		pr_err("LEP_SetOemGpioMode failed\n");
